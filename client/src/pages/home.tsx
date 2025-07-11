@@ -1326,10 +1326,6 @@ export default function Home() {
                     <Download className="w-4 h-4 mr-2" />
                     Download PDF
                   </Button>
-                  <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/20">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Add to Calendar
-                  </Button>
                   <Button 
                     variant="secondary" 
                     size="sm" 
