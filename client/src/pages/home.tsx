@@ -131,6 +131,8 @@ export default function Home() {
             throw new Error('No response body reader available');
           }
           
+          let buffer = '';
+          
           while (true) {
             const { done, value } = await reader.read();
             
@@ -138,30 +140,44 @@ export default function Home() {
               break;
             }
             
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            // Decode the chunk and add to buffer
+            buffer += decoder.decode(value, { stream: true });
+            
+            // Process complete lines
+            const lines = buffer.split('\n');
+            
+            // Keep the last incomplete line in the buffer
+            buffer = lines.pop() || '';
             
             for (const line of lines) {
+              if (line.trim() === '') {
+                continue; // Skip empty lines
+              }
+              
               if (line.startsWith('data: ')) {
                 try {
-                  const parsed = JSON.parse(line.substring(6));
-                  
-                  if (parsed.type === 'progress') {
-                    setCurrentGenerationStep(parsed.stage);
-                  } else if (parsed.type === 'success') {
-                    setCurrentGenerationStep(4);
-                    resolve({
-                      success: true,
-                      plan: parsed.plan,
-                      planId: parsed.planId
-                    });
-                    return;
-                  } else if (parsed.type === 'error') {
-                    reject(new Error(parsed.error));
-                    return;
+                  const jsonStr = line.substring(6).trim();
+                  if (jsonStr) {
+                    const parsed = JSON.parse(jsonStr);
+                    
+                    if (parsed.type === 'progress') {
+                      setCurrentGenerationStep(parsed.stage);
+                    } else if (parsed.type === 'success') {
+                      setCurrentGenerationStep(4);
+                      resolve({
+                        success: true,
+                        plan: parsed.plan,
+                        planId: parsed.planId
+                      });
+                      return;
+                    } else if (parsed.type === 'error') {
+                      reject(new Error(parsed.error));
+                      return;
+                    }
                   }
                 } catch (parseError) {
                   console.error('Failed to parse SSE message:', parseError);
+                  console.error('Problematic line:', line);
                 }
               }
             }
@@ -254,6 +270,8 @@ export default function Home() {
             throw new Error('No response body reader available');
           }
           
+          let buffer = '';
+          
           while (true) {
             const { done, value } = await reader.read();
             
@@ -261,31 +279,45 @@ export default function Home() {
               break;
             }
             
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            // Decode the chunk and add to buffer
+            buffer += decoder.decode(value, { stream: true });
+            
+            // Process complete lines
+            const lines = buffer.split('\n');
+            
+            // Keep the last incomplete line in the buffer
+            buffer = lines.pop() || '';
             
             for (const line of lines) {
+              if (line.trim() === '') {
+                continue; // Skip empty lines
+              }
+              
               if (line.startsWith('data: ')) {
                 try {
-                  const parsed = JSON.parse(line.substring(6));
-                  
-                  if (parsed.type === 'progress') {
-                    setCurrentGenerationStep(parsed.stage);
-                  } else if (parsed.type === 'success') {
-                    setCurrentGenerationStep(4);
-                    resolve({
-                      success: true,
-                      plan: parsed.plan,
-                      planId: parsed.planId,
-                      extractedText: parsed.extractedText
-                    });
-                    return;
-                  } else if (parsed.type === 'error') {
-                    reject(new Error(parsed.error));
-                    return;
+                  const jsonStr = line.substring(6).trim();
+                  if (jsonStr) {
+                    const parsed = JSON.parse(jsonStr);
+                    
+                    if (parsed.type === 'progress') {
+                      setCurrentGenerationStep(parsed.stage);
+                    } else if (parsed.type === 'success') {
+                      setCurrentGenerationStep(4);
+                      resolve({
+                        success: true,
+                        plan: parsed.plan,
+                        planId: parsed.planId,
+                        extractedText: parsed.extractedText
+                      });
+                      return;
+                    } else if (parsed.type === 'error') {
+                      reject(new Error(parsed.error));
+                      return;
+                    }
                   }
                 } catch (parseError) {
                   console.error('Failed to parse SSE message:', parseError);
+                  console.error('Problematic line:', line);
                 }
               }
             }
