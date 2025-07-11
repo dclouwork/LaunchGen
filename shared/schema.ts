@@ -110,6 +110,11 @@ export const launchPlanResponse = z.object({
       timeEstimate: z.string(),
       tool: z.string(),
       kpi: z.string(),
+      postDraft: z.object({
+        title: z.string().optional(),
+        body: z.string().optional(),
+        thread: z.array(z.string()).optional(),
+      }).optional(),
     })),
     redditTips: z.array(z.string()),
   })),

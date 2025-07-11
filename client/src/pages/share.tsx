@@ -179,6 +179,37 @@ export default function SharePage() {
                                 <span><Wrench className="w-3 h-3 mr-1 inline" />{task.tool}</span>
                                 <span><Target className="w-3 h-3 mr-1 inline" />{task.kpi}</span>
                               </div>
+                              
+                              {/* Social Media Post Draft */}
+                              {task.postDraft && (
+                                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                  <h6 className="font-medium text-blue-800 text-xs mb-2">
+                                    {task.postDraft.title ? 'Reddit Post Draft' : 'Social Media Post Draft'}
+                                  </h6>
+                                  {task.postDraft.title && (
+                                    <div className="space-y-2">
+                                      <p className="text-xs font-semibold text-blue-700">Title:</p>
+                                      <p className="text-xs text-blue-600">{task.postDraft.title}</p>
+                                    </div>
+                                  )}
+                                  {task.postDraft.body && (
+                                    <div className="space-y-2 mt-2">
+                                      <p className="text-xs font-semibold text-blue-700">Body:</p>
+                                      <p className="text-xs text-blue-600 whitespace-pre-wrap">{task.postDraft.body}</p>
+                                    </div>
+                                  )}
+                                  {task.postDraft.thread && (
+                                    <div className="space-y-2">
+                                      <p className="text-xs font-semibold text-blue-700">Thread:</p>
+                                      {task.postDraft.thread.map((tweet: string, index: number) => (
+                                        <p key={index} className="text-xs text-blue-600 pl-2">
+                                          {index + 1}. {tweet}
+                                        </p>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
