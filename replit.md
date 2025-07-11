@@ -124,3 +124,12 @@ Preferred communication style: Simple, everyday language.
 3. **Custom PDF Filenames**: PDF downloads now use the custom plan title and current date (format: BusinessName_2025-01-11.pdf)
 
 4. **Automatic Business Name Detection**: When a plan is generated, the system automatically extracts the business name from the executive summary and sets it as the plan title
+
+5. **Security Enhancements**: Implemented comprehensive security improvements:
+   - **Session Security**: Required SESSION_SECRET in production, removed hardcoded fallback, added validation
+   - **PostgreSQL Session Store**: Sessions now stored in PostgreSQL with automatic pruning instead of in-memory
+   - **Enhanced Cookie Security**: Added sameSite protection, rolling sessions, custom session names
+   - **Helmet.js Integration**: Added security headers for XSS, clickjacking, and other attack prevention
+   - **Rate Limiting**: Implemented general rate limiting (100 req/15min) and stricter limits for auth endpoints
+   - **Input Validation**: Added express-validator for all user inputs with proper sanitization
+   - **Payload Limits**: Set 10MB limits on request bodies to prevent DoS attacks

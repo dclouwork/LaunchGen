@@ -1,5 +1,6 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
+import { body, param, validationResult } from "express-validator";
 import { storage } from "./storage";
 import { businessInfoSchema } from "@shared/schema";
 import { generateLaunchPlan, extractTextFromPDF } from "./services/openai";
@@ -133,7 +134,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update existing launch plan
-  app.put("/api/plan/:id", async (req, res) => {
+  app.put("/api/plan/:id", [
+    param('id').isInt({ min: 1 }).withMessage('Invalid plan ID'),
+    body('generatedPlan').isObject().withMessage('Generated plan must be an object'),
+    body('generatedPlan.title').optional().isString().trim().isLength({ max: 200 })
+      .withMessage('Title must be less than 200 characters')
+  ], async (req, res) => {
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        errors: errors.array() 
+      });
+    }
+
     try {
       const planId = parseInt(req.params.id);
       const updates = req.body;
@@ -260,7 +275,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new feedback
-  app.post("/api/feedback", async (req, res) => {
+  app.post("/api/feedback", [
+    body('feedback').isString().trim().isLength({ min: 10, max: 1000 })
+      .withMessage('Feedback must be between 10 and 1000 characters'),
+    body('name').optional().isString().trim().isLength({ max: 100 })
+      .withMessage('Name must be less than 100 characters'),
+    body('startupName').optional().isString().trim().isLength({ max: 100 })
+      .withMessage('Startup name must be less than 100 characters'),
+    body('domain').optional().isString().trim().isLength({ max: 100 })
+      .withMessage('Domain must be less than 100 characters')
+  ], async (req, res) => {
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        errors: errors.array() 
+      });
+    }
+
     try {
       const { name, startupName, domain, feedback } = req.body;
       
@@ -288,17 +321,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Vote on feedback
-  app.post("/api/feedback/:id/vote", async (req, res) => {
+  app.post("/api/feedback/:id/vote", [
+    param('id').isInt({ min: 1 }).withMessage('Invalid feedback ID'),
+    body('voteType').isIn(['upvote', 'downvote']).withMessage('Vote type must be upvote or downvote')
+  ], async (req, res) => {
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        errors: errors.array() 
+      });
+    }
+
     try {
       const feedbackId = parseInt(req.params.id);
       const { voteType } = req.body;
-      
-      if (voteType !== 'upvote' && voteType !== 'downvote') {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid vote type"
-        });
-      }
       
       const userIdentifier = req.session?.id || req.sessionID;
       if (!userIdentifier) {

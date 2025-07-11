@@ -1,22 +1,74 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { pool } from "./db";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
-// Configure session middleware
+// Trust proxy headers for accurate rate limiting (required for Replit)
+app.set('trust proxy', true);
+
+// Security middleware - Helmet sets various HTTP headers
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+  crossOriginEmbedderPolicy: false
+}));
+
+// Rate limiting - prevent brute force attacks
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to API routes
+app.use('/api/', limiter);
+
+// Stricter rate limiting for sensitive endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs for auth endpoints
+  skipSuccessfulRequests: true, // Don't count successful requests
+});
+
+app.use(express.json({ limit: '10mb' })); // Limit payload size
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Validate session secret in production
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  console.error('ERROR: SESSION_SECRET environment variable is required in production!');
+  process.exit(1);
+}
+
+// Configure PostgreSQL session store
+const PgStore = connectPgSimple(session);
+const sessionStore = new PgStore({
+  pool: pool,
+  tableName: 'user_sessions',
+  createTableIfMissing: true,
+  pruneSessionInterval: 60 * 60 // Prune expired sessions every hour
+});
+
+// Configure session middleware with security best practices
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
+  secret: process.env.SESSION_SECRET || 'dev-only-secret-' + Math.random().toString(36),
+  store: sessionStore,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false, // Don't save empty sessions
+  rolling: true, // Reset expiry on activity
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-  }
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true, // Prevent XSS attacks
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: 'strict' // CSRF protection
+  },
+  name: 'sessionId' // Don't use default name
 }));
 
 app.use((req, res, next) => {
