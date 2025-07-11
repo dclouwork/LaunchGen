@@ -1,0 +1,64 @@
+A single-page web application that generates detailed 30-day launch plans for businesses using OpenAI API integration. Users can input comprehensive business information through text fields or upload PDF documents from their device to receive customized launch strategies.
+
+Core Features:
+- Text input form for detailed business information entry
+- PDF file upload functionality from user's device
+- OpenAI API integration to generate 30-day launch plans using the provided prompt template
+- Display generated launch plan in a structured, readable format (JSON-based weekly breakdown with daily tasks, tools, KPIs)
+
+Visual References:
+Inspired by Notion's clean input forms and Linear's project planning interface, known for their focused single-purpose layouts and excellent content readability.
+
+Style Guide:
+- Colors: Primary #6366F1 (indigo), Secondary #8B5CF6 (purple), Background #FAFAFA (off-white), Text #111827 (dark grey), Success #10B981 (emerald), Card Background #FFFFFF (white)
+- Design: Inter/SF Pro fonts, centered single-column layout with generous white space, card-based sections, 24px padding, clean form inputs with drag-and-drop file upload, responsive design optimized for both input and output phases
+
+System Prompt for open AI is as follows
+
+const launchPrompt = `
+Generate an EXTREMELY detailed 30-Day Launch Strategy
+for turning the user's idea — "${safeOriginalInput}" — into real traction
+using the "${safeIdea.title}" monetization path.
+
+FOUNDATIONAL PRINCIPLES (do NOT violate):
+- Speed & Simplicity
+- Reddit-First Marketing
+- Zero-Budget Growth
+- Solo-Operation Efficiency
+- One Problem, One Solution
+
+CONSTRAINTS:
+- Solo founder, 10 h/week bandwidth (default unless user overrides)
+- Total ad budget: $0 (tool spend minimal)
+- Voice & tone: friendly, direct, no hype jargon
+
+THE 30-DAY FRAMEWORK YOU MUST FOLLOW:
+Week 1 (Days 1-7)  : Foundation & Speed Build
+Week 2 (Days 8-14) : Community Validation
+Week 3 (Days 15-21): Growth & Iteration
+Week 4 (Days 22-30): Monetization & Scale
+
+Each day must include:
+• Task description (verb-first)  
+• Tool(s) with exact current pricing or “free”  
+• Time estimate (“0.5 h”, “2 h”)  
+• Micro-KPI (how to know today is done)
+
+Respond ONLY with valid JSON. Use this schema as a **guide**;  
+**omit or customise** any field that is not relevant.
+
+{
+  "overview": "...one-paragraph summary ending with a Day-30 KPI...",
+  "weeklyPlan": [
+    { "title": "Week 1: …", "goal": "…", "dailyTasks": [...], "redditTips": [...] },
+    ...
+  ],
+  "recommendedTools": [
+    { "name": "...", "purpose": "...", "pricing": "...", "setupSteps": [...] }
+  ],
+  "kpis": [
+    { "metric": "...", "target": "...", "tracking": "..." }
+  ],
+  "nextActions": [ /* 0-3 items *only if necessary* */ ]
+}
+`;
