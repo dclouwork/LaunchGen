@@ -247,8 +247,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const allFeedback = await storage.getAllFeedback();
       
-      // If user has a session ID, get their votes
-      const userIdentifier = req.session?.id || req.sessionID;
+      // Use consistent votingId for tracking votes
+      const userIdentifier = req.session?.votingId;
       const feedbackWithVotes = await Promise.all(
         allFeedback.map(async (feedback) => {
           const userVote = userIdentifier 
@@ -338,13 +338,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const feedbackId = parseInt(req.params.id);
       const { voteType } = req.body;
       
-      const userIdentifier = req.session?.id || req.sessionID;
-      if (!userIdentifier) {
-        return res.status(400).json({
-          success: false,
-          error: "Session required for voting"
-        });
+      // Ensure session is saved for voting
+      if (!req.session.votingId) {
+        req.session.votingId = req.sessionID;
+        req.session.save(); // Force save the session
       }
+      
+      const userIdentifier = req.session.votingId;
       
       await storage.voteFeedback(feedbackId, userIdentifier, voteType);
       
