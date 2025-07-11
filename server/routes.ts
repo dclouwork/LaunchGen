@@ -35,6 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessInfo: JSON.stringify(validatedData),
         generatedPlan: generatedPlan,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
 
       res.json({
@@ -87,6 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessInfo: JSON.stringify(businessInfo),
         generatedPlan: generatedPlan,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
 
       res.json({
@@ -126,6 +128,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({
         success: false,
         error: "Failed to retrieve launch plan"
+      });
+    }
+  });
+
+  // Update existing launch plan
+  app.put("/api/plan/:id", async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      // Update the plan
+      const updatedPlan = await storage.updateLaunchPlan(planId, {
+        generatedPlan: updates.generatedPlan,
+        updatedAt: new Date().toISOString(),
+      });
+      
+      if (!updatedPlan) {
+        return res.status(404).json({
+          success: false,
+          error: "Launch plan not found"
+        });
+      }
+      
+      res.json({
+        success: true,
+        plan: updatedPlan.generatedPlan
+      });
+    } catch (error) {
+      console.error("Update plan error:", error);
+      res.status(400).json({
+        success: false,
+        error: "Failed to update launch plan"
+      });
+    }
+  });
+
+  // Generate share token for a plan
+  app.post("/api/plan/:id/share", async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      
+      // Generate a unique share token
+      const shareToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      
+      const updatedPlan = await storage.updateLaunchPlan(planId, {
+        shareToken: shareToken,
+        updatedAt: new Date().toISOString(),
+      });
+      
+      if (!updatedPlan) {
+        return res.status(404).json({
+          success: false,
+          error: "Launch plan not found"
+        });
+      }
+      
+      res.json({
+        success: true,
+        shareToken: shareToken,
+        shareUrl: `/share/${shareToken}`
+      });
+    } catch (error) {
+      console.error("Generate share token error:", error);
+      res.status(400).json({
+        success: false,
+        error: "Failed to generate share token"
+      });
+    }
+  });
+
+  // Get plan by share token
+  app.get("/api/share/:token", async (req, res) => {
+    try {
+      const shareToken = req.params.token;
+      const plan = await storage.getLaunchPlanByShareToken(shareToken);
+      
+      if (!plan) {
+        return res.status(404).json({
+          success: false,
+          error: "Shared plan not found"
+        });
+      }
+      
+      res.json({
+        success: true,
+        plan: plan.generatedPlan,
+        isEditable: plan.isEditable
+      });
+    } catch (error) {
+      console.error("Get shared plan error:", error);
+      res.status(400).json({
+        success: false,
+        error: "Failed to retrieve shared plan"
       });
     }
   });

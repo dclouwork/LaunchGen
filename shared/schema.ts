@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -10,10 +11,26 @@ export const users = pgTable("users", {
 
 export const launchPlans = pgTable("launch_plans", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
   businessInfo: text("business_info").notNull(),
   generatedPlan: jsonb("generated_plan").notNull(),
   createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  shareToken: text("share_token").unique(),
+  isEditable: boolean("is_editable").notNull().default(true),
 });
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  launchPlans: many(launchPlans),
+}));
+
+export const launchPlansRelations = relations(launchPlans, ({ one }) => ({
+  user: one(users, {
+    fields: [launchPlans.userId],
+    references: [users.id],
+  }),
+}));
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -21,9 +38,13 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertLaunchPlanSchema = createInsertSchema(launchPlans).pick({
+  userId: true,
   businessInfo: true,
   generatedPlan: true,
   createdAt: true,
+  updatedAt: true,
+  shareToken: true,
+  isEditable: true,
 });
 
 export const businessInfoSchema = z.object({

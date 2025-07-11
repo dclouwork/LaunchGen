@@ -8,10 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { businessInfoSchema, type BusinessInfo, type LaunchPlanResponse } from "@shared/schema";
-import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Calendar, Share, Clock, Target, Wrench, ChevronDown, ChevronRight } from "lucide-react";
+import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Calendar, Share, Clock, Target, Wrench, ChevronDown, ChevronRight, Save, X, Share2 } from "lucide-react";
 import jsPDF from "jspdf";
 
 export default function Home() {
@@ -20,6 +27,11 @@ export default function Home() {
   const [expandedWeeks, setExpandedWeeks] = useState<Record<number, boolean>>({});
   const [isDragging, setIsDragging] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedPlan, setEditedPlan] = useState<LaunchPlanResponse | null>(null);
+  const [planId, setPlanId] = useState<number | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<BusinessInfo>({
@@ -56,6 +68,8 @@ export default function Home() {
     onSuccess: (data) => {
       if (data.success) {
         setGeneratedPlan(data.plan);
+        setPlanId(data.planId);
+        setEditedPlan(data.plan);
         toast({
           title: "Success!",
           description: "Your 30-day launch plan has been generated.",
@@ -99,6 +113,8 @@ export default function Home() {
     onSuccess: (data) => {
       if (data.success) {
         setGeneratedPlan(data.plan);
+        setPlanId(data.planId);
+        setEditedPlan(data.plan);
         toast({
           title: "Success!",
           description: "Your business plan PDF has been processed and launch plan generated.",
@@ -114,6 +130,59 @@ export default function Home() {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to process PDF",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const savePlanMutation = useMutation({
+    mutationFn: async (updatedPlan: LaunchPlanResponse) => {
+      if (!planId) throw new Error("No plan ID available");
+      const response = await apiRequest("PUT", `/api/plan/${planId}`, {
+        generatedPlan: updatedPlan
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setGeneratedPlan(editedPlan);
+        setIsEditMode(false);
+        toast({
+          title: "Saved!",
+          description: "Your changes have been saved successfully.",
+        });
+      } else {
+        throw new Error("Failed to save plan");
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save changes",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sharePlanMutation = useMutation({
+    mutationFn: async () => {
+      if (!planId) throw new Error("No plan ID available");
+      const response = await apiRequest("POST", `/api/plan/${planId}/share`, {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        const fullUrl = `${window.location.origin}${data.shareUrl}`;
+        setShareUrl(fullUrl);
+        setShowShareDialog(true);
+      } else {
+        throw new Error("Failed to generate share link");
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate share link",
         variant: "destructive",
       });
     },
@@ -696,18 +765,83 @@ export default function Home() {
                       <ChartLine className="text-[hsl(142,76%,36%)] w-5 h-5" />
                       <h3 className="text-xl font-semibold">Your 30-Day Launch Plan</h3>
                     </div>
-                    <Button variant="outline" size="sm" onClick={copyToClipboard}>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copy Plan
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      {isEditMode ? (
+                        <>
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={() => {
+                              if (editedPlan) {
+                                savePlanMutation.mutate(editedPlan);
+                              }
+                            }}
+                            disabled={savePlanMutation.isPending}
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Changes
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setIsEditMode(false);
+                              setEditedPlan(generatedPlan);
+                            }}
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setIsEditMode(true)}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => sharePlanMutation.mutate()}
+                            disabled={sharePlanMutation.isPending}
+                          >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {/* Plan Summary */}
                   <div className="bg-muted rounded-lg p-4 mb-6">
                     <h4 className="font-semibold text-foreground mb-2">Executive Summary</h4>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {generatedPlan.overview}
-                    </p>
+                    {isEditMode ? (
+                      <Textarea
+                        className="text-sm leading-relaxed min-h-[100px]"
+                        value={editedPlan?.overview || ''}
+                        onChange={(e) => {
+                          if (editedPlan) {
+                            setEditedPlan({
+                              ...editedPlan,
+                              overview: e.target.value
+                            });
+                          }
+                        }}
+                      />
+                    ) : (
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {generatedPlan.overview}
+                      </p>
+                    )}
                   </div>
 
                   {/* Week-by-Week Breakdown */}
@@ -741,12 +875,68 @@ export default function Home() {
                                   <span className="text-xs font-semibold text-primary">{task.day}</span>
                                 </div>
                                 <div className="flex-grow">
-                                  <h6 className="font-medium text-foreground text-sm">{task.description}</h6>
-                                  <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
-                                    <span><Clock className="w-3 h-3 mr-1 inline" />{task.timeEstimate}</span>
-                                    <span><Wrench className="w-3 h-3 mr-1 inline" />{task.tool}</span>
-                                    <span><Target className="w-3 h-3 mr-1 inline" />{task.kpi}</span>
-                                  </div>
+                                  {isEditMode ? (
+                                    <>
+                                      <Input
+                                        className="font-medium text-sm mb-2"
+                                        value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.description || ''}
+                                        onChange={(e) => {
+                                          if (editedPlan) {
+                                            const newPlan = { ...editedPlan };
+                                            newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].description = e.target.value;
+                                            setEditedPlan(newPlan);
+                                          }
+                                        }}
+                                      />
+                                      <div className="grid grid-cols-3 gap-2 mt-2">
+                                        <Input
+                                          className="text-xs"
+                                          placeholder="Time estimate"
+                                          value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.timeEstimate || ''}
+                                          onChange={(e) => {
+                                            if (editedPlan) {
+                                              const newPlan = { ...editedPlan };
+                                              newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].timeEstimate = e.target.value;
+                                              setEditedPlan(newPlan);
+                                            }
+                                          }}
+                                        />
+                                        <Input
+                                          className="text-xs"
+                                          placeholder="Tool"
+                                          value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.tool || ''}
+                                          onChange={(e) => {
+                                            if (editedPlan) {
+                                              const newPlan = { ...editedPlan };
+                                              newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].tool = e.target.value;
+                                              setEditedPlan(newPlan);
+                                            }
+                                          }}
+                                        />
+                                        <Input
+                                          className="text-xs"
+                                          placeholder="KPI"
+                                          value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.kpi || ''}
+                                          onChange={(e) => {
+                                            if (editedPlan) {
+                                              const newPlan = { ...editedPlan };
+                                              newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].kpi = e.target.value;
+                                              setEditedPlan(newPlan);
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <h6 className="font-medium text-foreground text-sm">{task.description}</h6>
+                                      <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                                        <span><Clock className="w-3 h-3 mr-1 inline" />{task.timeEstimate}</span>
+                                        <span><Wrench className="w-3 h-3 mr-1 inline" />{task.tool}</span>
+                                        <span><Target className="w-3 h-3 mr-1 inline" />{task.kpi}</span>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             ))}
@@ -844,6 +1034,63 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Your Launch Plan</DialogTitle>
+            <DialogDescription>
+              Share this launch plan with your team or save the link for later access.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Share Link</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  readOnly
+                  value={shareUrl || ''}
+                  className="flex-1"
+                />
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    if (shareUrl) {
+                      await navigator.clipboard.writeText(shareUrl);
+                      toast({
+                        title: "Copied!",
+                        description: "Share link copied to clipboard.",
+                      });
+                    }
+                  }}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            {/* Mobile Share Options */}
+            {navigator.share && (
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => {
+                  if (shareUrl) {
+                    navigator.share({
+                      title: 'My Launch Plan',
+                      text: 'Check out my 30-day business launch plan!',
+                      url: shareUrl,
+                    }).catch((err) => console.error('Error sharing:', err));
+                  }
+                }}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share via Device
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="bg-card border-t border-border mt-16">
