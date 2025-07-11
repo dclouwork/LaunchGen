@@ -185,7 +185,7 @@ async function finalizeWithO3(proofreadPlan: any, postDrafts: any[]): Promise<La
     "every dailyTask has task, tools[], time, kpi",
     "tools array: names only; pricing → retain or TBD",
     "no hard-coded budgets or KPI targets",
-    "all social media posts have drafts embedded"
+    "all social media posts have drafts embedded that don't include any em dashes whatsoever"
   ];
 
   const prompt = `
@@ -212,6 +212,7 @@ Rules:
 - Convert description to task field
 - If any required field is missing, set it to "TBD" and add notes
 - Return the final JSON plan ready for delivery
+- Do not include any em dashes in the final output
 
 Expected schema for dailyTasks:
 {
