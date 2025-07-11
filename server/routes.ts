@@ -67,14 +67,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract text from PDF using OpenAI
       const extractedText = await extractTextFromPDF(base64Data);
       
-      // Create a basic business info structure from extracted text
+      // Get form data from request body
+      const { industry, targetMarket, timeCommitment, budget, additionalDetails } = req.body;
+      
+      // Create business info structure combining PDF content and form data
       const businessInfo = {
         businessIdea: extractedText,
-        industry: "Not specified",
-        targetMarket: "Not specified", 
-        timeCommitment: "10 hours/week",
-        budget: "$0 (Zero-budget)",
-        additionalDetails: "Extracted from uploaded PDF document"
+        industry: industry || "Not specified",
+        targetMarket: targetMarket || "Not specified", 
+        timeCommitment: timeCommitment || "10 hours/week",
+        budget: budget || "$0 (Zero-budget)",
+        additionalDetails: additionalDetails || "Extracted from uploaded PDF document"
       };
 
       const generatedPlan = await generateLaunchPlan(businessInfo);

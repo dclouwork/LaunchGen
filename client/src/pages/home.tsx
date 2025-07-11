@@ -19,12 +19,27 @@ export default function Home() {
   const [generatedPlan, setGeneratedPlan] = useState<LaunchPlanResponse | null>(null);
   const [expandedWeeks, setExpandedWeeks] = useState<Record<number, boolean>>({});
   const [isDragging, setIsDragging] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const form = useForm<BusinessInfo>({
     resolver: zodResolver(businessInfoSchema),
     defaultValues: {
       businessIdea: "",
+      industry: "",
+      targetMarket: "",
+      timeCommitment: "10 hours/week",
+      budget: "$0 (Zero-budget)",
+      additionalDetails: "",
+    },
+  });
+
+  // Create a separate form for PDF upload with only the additional fields
+  const pdfForm = useForm<Omit<BusinessInfo, 'businessIdea'> & { businessIdea?: string }>({
+    resolver: zodResolver(businessInfoSchema.omit({ businessIdea: true }).extend({
+      businessIdea: businessInfoSchema.shape.businessIdea.optional(),
+    })),
+    defaultValues: {
       industry: "",
       targetMarket: "",
       timeCommitment: "10 hours/week",
@@ -59,13 +74,18 @@ export default function Home() {
   });
 
   const generatePlanFromPDFMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('pdf', file);
+    mutationFn: async ({ file, formData }: { file: File; formData: Omit<BusinessInfo, 'businessIdea'> }) => {
+      const data = new FormData();
+      data.append('pdf', file);
+      data.append('industry', formData.industry);
+      data.append('targetMarket', formData.targetMarket);
+      data.append('timeCommitment', formData.timeCommitment);
+      data.append('budget', formData.budget);
+      data.append('additionalDetails', formData.additionalDetails || '');
       
       const response = await fetch('/api/generate-plan-pdf', {
         method: 'POST',
-        body: formData,
+        body: data,
         credentials: 'include',
       });
       
@@ -83,6 +103,9 @@ export default function Home() {
           title: "Success!",
           description: "Your business plan PDF has been processed and launch plan generated.",
         });
+        // Reset the form and file
+        pdfForm.reset();
+        setPdfFile(null);
       } else {
         throw new Error(data.error);
       }
@@ -98,6 +121,18 @@ export default function Home() {
 
   const onSubmit = (data: BusinessInfo) => {
     generatePlanMutation.mutate(data);
+  };
+
+  const onPdfSubmit = (data: Omit<BusinessInfo, 'businessIdea'>) => {
+    if (!pdfFile) {
+      toast({
+        title: "No file selected",
+        description: "Please select a PDF file before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    generatePlanFromPDFMutation.mutate({ file: pdfFile, formData: data });
   };
 
   const handleFileUpload = useCallback((file: File) => {
@@ -119,8 +154,12 @@ export default function Home() {
       return;
     }
 
-    generatePlanFromPDFMutation.mutate(file);
-  }, [generatePlanFromPDFMutation, toast]);
+    setPdfFile(file);
+    toast({
+      title: "File uploaded",
+      description: `${file.name} ready for processing`,
+    });
+  }, [toast]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -342,7 +381,10 @@ export default function Home() {
                   type="button"
                   variant={inputMethod === 'text' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => setInputMethod('text')}
+                  onClick={() => {
+                    setInputMethod('text');
+                    setPdfFile(null); // Clear PDF file when switching
+                  }}
                   className="text-sm font-medium"
                 >
                   Text Input
@@ -351,7 +393,9 @@ export default function Home() {
                   type="button"
                   variant={inputMethod === 'pdf' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => setInputMethod('pdf')}
+                  onClick={() => {
+                    setInputMethod('pdf');
+                  }}
                   className="text-sm font-medium"
                 >
                   PDF Upload
@@ -471,7 +515,7 @@ export default function Home() {
 
               {/* PDF Upload Section */}
               {inputMethod === 'pdf' && (
-                <div>
+                <form onSubmit={pdfForm.handleSubmit(onPdfSubmit)} className="space-y-4">
                   <div 
                     className={`file-upload-zone border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                       isDragging ? 'border-primary bg-primary/5' : 'border-border'
@@ -501,17 +545,120 @@ export default function Home() {
                           input.accept = '.pdf';
                           input.onchange = (e) => {
                             const file = (e.target as HTMLInputElement).files?.[0];
-                            if (file) handleFileUpload(file);
+                            if (file) {
+                              setPdfFile(file);
+                              toast({
+                                title: "File uploaded",
+                                description: `${file.name} ready for processing`,
+                              });
+                            }
                           };
                           input.click();
                         }}
                         disabled={isLoading}
                       >
-                        {isLoading ? "Processing..." : "Choose File"}
+                        {pdfFile ? pdfFile.name : (isLoading ? "Processing..." : "Choose File")}
                       </Button>
                     </div>
                   </div>
-                </div>
+
+                  {/* Additional Fields for PDF Upload */}
+                  <div className="space-y-4 mt-6">
+                    <p className="text-sm text-muted-foreground">Provide additional context for your business plan:</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="pdf-industry">Industry</Label>
+                        <Input
+                          id="pdf-industry"
+                          placeholder="e.g., SaaS, E-commerce, Consulting"
+                          className="mt-2"
+                          {...pdfForm.register("industry")}
+                        />
+                        {pdfForm.formState.errors.industry && (
+                          <p className="text-sm text-destructive mt-1">{pdfForm.formState.errors.industry.message}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="pdf-targetMarket">Target Market</Label>
+                        <Input
+                          id="pdf-targetMarket"
+                          placeholder="e.g., Small businesses, Millennials"
+                          className="mt-2"
+                          {...pdfForm.register("targetMarket")}
+                        />
+                        {pdfForm.formState.errors.targetMarket && (
+                          <p className="text-sm text-destructive mt-1">{pdfForm.formState.errors.targetMarket.message}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="pdf-timeCommitment">Time Commitment (hours/week)</Label>
+                        <Select onValueChange={(value) => pdfForm.setValue("timeCommitment", value)} defaultValue={pdfForm.getValues("timeCommitment")}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10 hours/week">10 hours/week (default)</SelectItem>
+                            <SelectItem value="20 hours/week">20 hours/week</SelectItem>
+                            <SelectItem value="40 hours/week">40 hours/week</SelectItem>
+                            <SelectItem value="Custom">Custom</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="pdf-budget">Budget Range</Label>
+                        <Select onValueChange={(value) => pdfForm.setValue("budget", value)} defaultValue={pdfForm.getValues("budget")}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="$0 (Zero-budget)">$0 (Zero-budget)</SelectItem>
+                            <SelectItem value="$100-500">$100-500</SelectItem>
+                            <SelectItem value="$500-1000">$500-1000</SelectItem>
+                            <SelectItem value="$1000+">$1000+</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="pdf-additionalDetails">Additional Details</Label>
+                      <Textarea
+                        id="pdf-additionalDetails"
+                        placeholder="Any specific goals, constraints, or requirements for your launch plan..."
+                        className="mt-2"
+                        rows={3}
+                        {...pdfForm.register("additionalDetails")}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-border">
+                    <Button 
+                      type="submit"
+                      className="w-full py-4 text-lg font-semibold"
+                      disabled={isLoading || !pdfFile}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Brain className="w-5 h-5 mr-2 animate-spin" />
+                          Generating Plan...
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="w-5 h-5 mr-2" />
+                          Generate My 30-Day Launch Plan
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      {!pdfFile ? "Please select a PDF file first" : "This may take 30-60 seconds to generate your customized plan"}
+                    </p>
+                  </div>
+                </form>
               )}
             </CardContent>
           </Card>
