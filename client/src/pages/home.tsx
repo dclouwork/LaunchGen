@@ -21,6 +21,7 @@ import { businessInfoSchema, type BusinessInfo, type LaunchPlanResponse } from "
 import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Share, Clock, Target, Wrench, ChevronDown, ChevronRight, Save, X, Share2, Plus } from "lucide-react";
 import jsPDF from "jspdf";
 import CommunityFeedback from "@/components/CommunityFeedback";
+import SEO from "@/components/SEO";
 
 export default function Home() {
   const [inputMethod, setInputMethod] = useState<'text' | 'pdf'>('text');
@@ -458,7 +459,9 @@ export default function Home() {
   const isLoading = generatePlanMutation.isPending || generatePlanFromPDFMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEO />
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-4xl mx-auto px-6 py-4">
@@ -1411,5 +1414,6 @@ export default function Home() {
         
       </footer>
     </div>
+    </>
   );
 }

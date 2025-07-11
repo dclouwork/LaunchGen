@@ -7,6 +7,7 @@ import { ChartLine, ChevronRight, ChevronDown, Calendar, Clock, Target, Wrench, 
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { type LaunchPlanResponse } from "@shared/schema";
+import SEO from "@/components/SEO";
 
 export default function SharePage() {
   const { token } = useParams();
@@ -50,36 +51,58 @@ export default function SharePage() {
     }
   };
 
+  // Generate SEO metadata based on the plan
+  const seoTitle = plan ? `${plan.overview.split('.')[0]} - Launch Plan` : "Shared Launch Plan";
+  const seoDescription = plan ? 
+    `Detailed 30-day launch plan: ${plan.overview.substring(0, 150)}...` : 
+    "View this detailed 30-day business launch plan with weekly tasks and daily actions.";
+  
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading shared plan...</p>
+      <>
+        <SEO title="Loading Launch Plan..." description="Loading shared business launch plan..." />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading shared plan...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error || !plan) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h2 className="text-2xl font-semibold">Plan Not Found</h2>
-          <p className="text-muted-foreground">This shared plan doesn't exist or has expired.</p>
-          <Link href="/">
-            <Button>
-              <Home className="w-4 h-4 mr-2" />
-              Go Home
-            </Button>
-          </Link>
+      <>
+        <SEO 
+          title="Plan Not Found - Launch Plan Generator" 
+          description="This shared launch plan doesn't exist or has expired."
+          noIndex={true}
+        />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-semibold">Plan Not Found</h2>
+            <p className="text-muted-foreground">This shared plan doesn't exist or has expired.</p>
+            <Link href="/">
+              <Button>
+                <Home className="w-4 h-4 mr-2" />
+                Go Home
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEO 
+        title={seoTitle}
+        description={seoDescription}
+        ogUrl={`${window.location.origin}/share/${token}`}
+      />
+      <div className="min-h-screen bg-background">
       <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -225,5 +248,6 @@ export default function SharePage() {
         </div>
       </main>
     </div>
+    </>
   );
 }
