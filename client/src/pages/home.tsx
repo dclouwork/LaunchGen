@@ -32,6 +32,8 @@ export default function Home() {
   const [planId, setPlanId] = useState<number | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [planTitle, setPlanTitle] = useState("Your 30-Day Launch Plan");
+  const [editedPlanTitle, setEditedPlanTitle] = useState("Your 30-Day Launch Plan");
   const { toast } = useToast();
 
   const form = useForm<BusinessInfo>({
@@ -305,7 +307,7 @@ export default function Home() {
       };
 
       // Title
-      addTextWithPageBreak("30-Day Business Launch Plan", 20, true);
+      addTextWithPageBreak(planTitle, 20, true);
       yPosition += 5;
 
       // Overview
@@ -388,7 +390,9 @@ export default function Home() {
       });
 
       // Save the PDF
-      const fileName = `LaunchPlan_${new Date().toISOString().split('T')[0]}.pdf`;
+      const dateStr = new Date().toISOString().split('T')[0];
+      const sanitizedTitle = planTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
+      const fileName = `${sanitizedTitle}_${dateStr}.pdf`;
       pdf.save(fileName);
 
       toast({
@@ -763,7 +767,16 @@ export default function Home() {
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                       <ChartLine className="text-[hsl(142,76%,36%)] w-5 h-5" />
-                      <h3 className="text-xl font-semibold">Your 30-Day Launch Plan</h3>
+                      {isEditMode ? (
+                        <Input
+                          className="text-xl font-semibold max-w-xs"
+                          value={editedPlanTitle}
+                          onChange={(e) => setEditedPlanTitle(e.target.value)}
+                          placeholder="Enter plan title"
+                        />
+                      ) : (
+                        <h3 className="text-xl font-semibold">{planTitle}</h3>
+                      )}
                     </div>
                     <div className="flex items-center space-x-2">
                       {isEditMode ? (
@@ -774,6 +787,7 @@ export default function Home() {
                             onClick={() => {
                               if (editedPlan) {
                                 savePlanMutation.mutate(editedPlan);
+                                setPlanTitle(editedPlanTitle);
                               }
                             }}
                             disabled={savePlanMutation.isPending}
@@ -787,6 +801,7 @@ export default function Home() {
                             onClick={() => {
                               setIsEditMode(false);
                               setEditedPlan(generatedPlan);
+                              setEditedPlanTitle(planTitle);
                             }}
                           >
                             <X className="w-4 h-4 mr-2" />
@@ -802,7 +817,10 @@ export default function Home() {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => setIsEditMode(true)}
+                            onClick={() => {
+                              setIsEditMode(true);
+                              setEditedPlanTitle(planTitle);
+                            }}
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
@@ -1258,7 +1276,13 @@ export default function Home() {
                     <Calendar className="w-4 h-4 mr-2" />
                     Add to Calendar
                   </Button>
-                  <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/20">
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+                    onClick={() => sharePlanMutation.mutate()}
+                    disabled={sharePlanMutation.isPending}
+                  >
                     <Share className="w-4 h-4 mr-2" />
                     Share Plan
                   </Button>
