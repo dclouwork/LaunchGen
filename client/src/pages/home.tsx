@@ -868,138 +868,142 @@ export default function Home() {
                         
                         {expandedWeeks[weekIndex] && (
                           <div className="p-4 space-y-3">
-                            {/* Daily Tasks Header with Add Button */}
-                            {isEditMode && (
-                              <div className="flex justify-end mb-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    if (editedPlan) {
-                                      const newTask = {
-                                        day: `Day ${editedPlan.weeklyPlan[weekIndex].dailyTasks.length + 1}`,
-                                        description: "New task description",
-                                        timeEstimate: "1 hour",
-                                        tool: "Tool name",
-                                        kpi: "KPI metric"
-                                      };
-                                      const newPlan = { ...editedPlan };
-                                      newPlan.weeklyPlan[weekIndex].dailyTasks = [
-                                        ...newPlan.weeklyPlan[weekIndex].dailyTasks,
-                                        newTask
-                                      ];
-                                      setEditedPlan(newPlan);
-                                    }
-                                  }}
-                                >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Add Task
-                                </Button>
-                              </div>
-                            )}
-                            
-                            {/* Daily Tasks */}
-                            {(isEditMode ? editedPlan?.weeklyPlan[weekIndex]?.dailyTasks || [] : week.dailyTasks).map((task, taskIndex) => (
-                              <div key={taskIndex} className="flex items-start space-x-3 p-3 bg-muted rounded-lg">
-                                <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                  {isEditMode ? (
-                                    <Input
-                                      className="w-full h-full text-center text-xs font-semibold text-primary bg-transparent border-0 p-0"
-                                      value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.day || ''}
-                                      onChange={(e) => {
-                                        if (editedPlan) {
-                                          const newPlan = { ...editedPlan };
-                                          newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].day = e.target.value;
-                                          setEditedPlan(newPlan);
-                                        }
-                                      }}
-                                    />
-                                  ) : (
-                                    <span className="text-xs font-semibold text-primary">{task.day}</span>
-                                  )}
-                                </div>
-                                <div className="flex-grow">
-                                  {isEditMode ? (
-                                    <>
-                                      <Input
-                                        className="font-medium text-sm mb-2"
-                                        value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.description || ''}
-                                        onChange={(e) => {
+                            {/* Group tasks by day */}
+                            {(() => {
+                              const tasksToDisplay = isEditMode ? editedPlan?.weeklyPlan[weekIndex]?.dailyTasks || [] : week.dailyTasks;
+                              const tasksByDay = tasksToDisplay.reduce((acc, task, index) => {
+                                const day = task.day;
+                                if (!acc[day]) acc[day] = [];
+                                acc[day].push({ ...task, originalIndex: index });
+                                return acc;
+                              }, {} as Record<string, Array<any>>);
+
+                              return Object.entries(tasksByDay).map(([day, dayTasks]) => (
+                                <div key={day} className="space-y-2">
+                                  {/* Day Header */}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                        <span className="text-xs font-semibold text-primary">{day}</span>
+                                      </div>
+                                      <h6 className="text-sm font-medium text-muted-foreground">Tasks for {day}</h6>
+                                    </div>
+                                    {isEditMode && (
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost"
+                                        onClick={() => {
                                           if (editedPlan) {
+                                            const newTask = {
+                                              day: day,
+                                              description: "New task",
+                                              timeEstimate: "30 min",
+                                              tool: "Tool",
+                                              kpi: "Metric"
+                                            };
                                             const newPlan = { ...editedPlan };
-                                            newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].description = e.target.value;
+                                            // Insert the new task after the last task of this day
+                                            const lastDayTaskIndex = Math.max(...dayTasks.map(t => t.originalIndex));
+                                            newPlan.weeklyPlan[weekIndex].dailyTasks.splice(lastDayTaskIndex + 1, 0, newTask);
                                             setEditedPlan(newPlan);
                                           }
                                         }}
-                                      />
-                                      <div className="grid grid-cols-3 gap-2 mt-2">
-                                        <Input
-                                          className="text-xs"
-                                          placeholder="Time estimate"
-                                          value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.timeEstimate || ''}
-                                          onChange={(e) => {
-                                            if (editedPlan) {
-                                              const newPlan = { ...editedPlan };
-                                              newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].timeEstimate = e.target.value;
-                                              setEditedPlan(newPlan);
-                                            }
-                                          }}
-                                        />
-                                        <Input
-                                          className="text-xs"
-                                          placeholder="Tool"
-                                          value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.tool || ''}
-                                          onChange={(e) => {
-                                            if (editedPlan) {
-                                              const newPlan = { ...editedPlan };
-                                              newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].tool = e.target.value;
-                                              setEditedPlan(newPlan);
-                                            }
-                                          }}
-                                        />
-                                        <Input
-                                          className="text-xs"
-                                          placeholder="KPI"
-                                          value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.kpi || ''}
-                                          onChange={(e) => {
-                                            if (editedPlan) {
-                                              const newPlan = { ...editedPlan };
-                                              newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].kpi = e.target.value;
-                                              setEditedPlan(newPlan);
-                                            }
-                                          }}
-                                        />
+                                      >
+                                        <Plus className="w-3 h-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Tasks for this day */}
+                                  <div className="ml-10 space-y-2">
+                                    {dayTasks.map((task) => (
+                                      <div key={task.originalIndex} className="flex items-start space-x-3 p-3 bg-muted rounded-lg">
+                                        <div className="flex-grow">
+                                          {isEditMode ? (
+                                            <>
+                                              <Input
+                                                className="font-medium text-sm mb-2"
+                                                value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.description || ''}
+                                                onChange={(e) => {
+                                                  if (editedPlan) {
+                                                    const newPlan = { ...editedPlan };
+                                                    newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].description = e.target.value;
+                                                    setEditedPlan(newPlan);
+                                                  }
+                                                }}
+                                              />
+                                              <div className="grid grid-cols-3 gap-2 mt-2">
+                                                <Input
+                                                  className="text-xs"
+                                                  placeholder="Time estimate"
+                                                  value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.timeEstimate || ''}
+                                                  onChange={(e) => {
+                                                    if (editedPlan) {
+                                                      const newPlan = { ...editedPlan };
+                                                      newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].timeEstimate = e.target.value;
+                                                      setEditedPlan(newPlan);
+                                                    }
+                                                  }}
+                                                />
+                                                <Input
+                                                  className="text-xs"
+                                                  placeholder="Tool"
+                                                  value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.tool || ''}
+                                                  onChange={(e) => {
+                                                    if (editedPlan) {
+                                                      const newPlan = { ...editedPlan };
+                                                      newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].tool = e.target.value;
+                                                      setEditedPlan(newPlan);
+                                                    }
+                                                  }}
+                                                />
+                                                <Input
+                                                  className="text-xs"
+                                                  placeholder="KPI"
+                                                  value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.kpi || ''}
+                                                  onChange={(e) => {
+                                                    if (editedPlan) {
+                                                      const newPlan = { ...editedPlan };
+                                                      newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].kpi = e.target.value;
+                                                      setEditedPlan(newPlan);
+                                                    }
+                                                  }}
+                                                />
+                                              </div>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <h6 className="font-medium text-foreground text-sm">{task.description}</h6>
+                                              <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                                                <span><Clock className="w-3 h-3 mr-1 inline" />{task.timeEstimate}</span>
+                                                <span><Wrench className="w-3 h-3 mr-1 inline" />{task.tool}</span>
+                                                <span><Target className="w-3 h-3 mr-1 inline" />{task.kpi}</span>
+                                              </div>
+                                            </>
+                                          )}
+                                        </div>
+                                        {isEditMode && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive flex-shrink-0"
+                                            onClick={() => {
+                                              if (editedPlan) {
+                                                const newPlan = { ...editedPlan };
+                                                newPlan.weeklyPlan[weekIndex].dailyTasks = newPlan.weeklyPlan[weekIndex].dailyTasks.filter((_, i) => i !== task.originalIndex);
+                                                setEditedPlan(newPlan);
+                                              }
+                                            }}
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </Button>
+                                        )}
                                       </div>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <h6 className="font-medium text-foreground text-sm">{task.description}</h6>
-                                      <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
-                                        <span><Clock className="w-3 h-3 mr-1 inline" />{task.timeEstimate}</span>
-                                        <span><Wrench className="w-3 h-3 mr-1 inline" />{task.tool}</span>
-                                        <span><Target className="w-3 h-3 mr-1 inline" />{task.kpi}</span>
-                                      </div>
-                                    </>
-                                  )}
+                                    ))}
+                                  </div>
                                 </div>
-                                {isEditMode && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-destructive hover:text-destructive flex-shrink-0"
-                                    onClick={() => {
-                                      if (editedPlan) {
-                                        const newPlan = { ...editedPlan };
-                                        newPlan.weeklyPlan[weekIndex].dailyTasks = newPlan.weeklyPlan[weekIndex].dailyTasks.filter((_, i) => i !== taskIndex);
-                                        setEditedPlan(newPlan);
-                                      }
-                                    }}
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
+                              ));
+                            })()}
 
                             {/* Reddit Tips Section */}
                             <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
