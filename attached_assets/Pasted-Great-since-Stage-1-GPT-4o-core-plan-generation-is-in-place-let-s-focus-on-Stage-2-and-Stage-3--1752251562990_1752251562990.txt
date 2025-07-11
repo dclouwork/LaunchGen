@@ -1,0 +1,110 @@
+Great—since Stage 1 (GPT-4o core plan generation) is in place, let’s focus on Stage 2 and Stage 3:
+
+---
+
+## Stage 2: GPT-4.5 — Proofread & Social-Post Drafts
+
+**Purpose**
+
+* Tighten and polish every field of the raw JSON plan.
+* For each `dailyTask` that involves a social post or community post, generate a draft (title + body or thread) under a new `postDrafts` array.
+
+**Input:**
+
+```json
+{
+  "rawPlan": { … }          // JSON from 4o
+}
+```
+
+**Prompt Highlights:**
+
+* “Proofread and tighten all text in `rawPlan`.”
+* “Do not fill in or change any `pricing` or `target` fields—leave them as-is or `TBD`.”
+* “For every day that mentions a Reddit or social-media post, append to `postDrafts` an object { day, channel, draft }.”
+
+**Output:**
+
+```json
+{
+  "proofreadPlan": { … },    // polished JSON plan
+  "postDrafts": [            // one item per social post
+    { "day": 9, "channel": "Reddit",   "draft": { "title": "...", "body": "..." } },
+    { "day": 27, "channel": "Twitter", "draft": { "thread": [ "Tweet 1", "Tweet 2", … ] } },
+    …
+  ]
+}
+```
+
+---
+
+## Stage 3: GPT-3 (o3) — Final QA & Completion
+
+**Purpose**
+
+* Validate that `proofreadPlan` follows your 30-day framework schema.
+* Merge in `postDrafts` under each corresponding `dailyTask` in the final JSON.
+* Ensure every task has exactly: `task`, `tools` (names only), `time`, `kpi`.
+* **Do not** hard-code pricing or KPI targets; any missing values remain `TBD`.
+* If any field is missing, add a `"notes"` field on that task.
+
+**Input:**
+
+```json
+{
+  "proofreadPlan": { … },
+  "postDrafts": [ … ],
+  "frameworkChecklist": [
+    "overview ends with a clear Day-30 outcome",
+    "every dailyTask has task, tools[], time, kpi",
+    "tools array: names only; pricing → retain or TBD",
+    "no hard-coded budgets or KPI targets"
+  ]
+}
+```
+
+**Prompt Highlights:**
+
+* “Verify schema compliance against `frameworkChecklist`. If any `dailyTask` lacks a required field, leave it `TBD` and add `notes` explaining what’s needed.”
+* “Embed the matching `postDraft` into its `dailyTask` under a new `postDraft` key.”
+* “Return the final JSON plan, ready to deliver.”
+
+**Final Output:**
+
+```json
+{
+  "overview": "...",
+  "weeklyPlan": [
+    {
+      "title": "...",
+      "dailyTasks": [
+        {
+          "day": 9,
+          "task": "...",
+          "tools": ["..."],
+          "time": "...",
+          "kpi": "...",
+          "postDraft": { "title": "...", "body": "..." }
+        },
+        …
+      ],
+      "redditTips": [ … ]
+    },
+    …
+  ],
+  "recommendedTools": [ … ],
+  "kpis": [ … ],
+  "nextActions": [ … ]
+}
+```
+
+---
+
+### Integration Flow
+
+1. **4o** → raw JSON.
+2. **4.5** → proofreadPlan + postDrafts.
+3. **o3** → finalPlan with drafts embedded and schema-checked.
+4. **Deliver** finalPlan to the user.
+
+This keeps Stage 1 as-is, adds copy-editing plus draft creation in Stage 2, then a rigorous schema and completeness check in Stage 3.
