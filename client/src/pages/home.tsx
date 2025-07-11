@@ -1046,6 +1046,146 @@ export default function Home() {
                                                   }}
                                                 />
                                               </div>
+                                              
+                                              {/* Social Media Post Draft - Edit Mode */}
+                                              {(task.postDraft || editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.postDraft) && (
+                                                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                  <h6 className="font-medium text-blue-800 text-xs mb-2">
+                                                    {task.postDraft?.title ? 'Reddit Post Draft' : 'Social Media Post Draft'}
+                                                  </h6>
+                                                  
+                                                  {/* Title */}
+                                                  <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-blue-700">Title:</Label>
+                                                    <Input
+                                                      className="text-xs bg-white"
+                                                      placeholder="Post title (for Reddit posts)"
+                                                      value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.postDraft?.title || ''}
+                                                      onChange={(e) => {
+                                                        if (editedPlan) {
+                                                          const newPlan = { ...editedPlan };
+                                                          if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft) {
+                                                            newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {};
+                                                          }
+                                                          newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.title = e.target.value;
+                                                          setEditedPlan(newPlan);
+                                                        }
+                                                      }}
+                                                    />
+                                                  </div>
+                                                  
+                                                  {/* Body */}
+                                                  <div className="space-y-2 mt-2">
+                                                    <Label className="text-xs font-semibold text-blue-700">Body:</Label>
+                                                    <Textarea
+                                                      className="text-xs bg-white"
+                                                      placeholder="Post body content"
+                                                      rows={4}
+                                                      value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.postDraft?.body || ''}
+                                                      onChange={(e) => {
+                                                        if (editedPlan) {
+                                                          const newPlan = { ...editedPlan };
+                                                          if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft) {
+                                                            newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {};
+                                                          }
+                                                          newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.body = e.target.value;
+                                                          setEditedPlan(newPlan);
+                                                        }
+                                                      }}
+                                                    />
+                                                  </div>
+                                                  
+                                                  {/* Thread */}
+                                                  <div className="space-y-2 mt-2">
+                                                    <Label className="text-xs font-semibold text-blue-700">Thread (for Twitter posts):</Label>
+                                                    <div className="space-y-2">
+                                                      {(editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.postDraft?.thread || []).map((tweet: string, tweetIndex: number) => (
+                                                        <div key={tweetIndex} className="flex items-start space-x-2">
+                                                          <span className="text-xs text-blue-600 mt-1">{tweetIndex + 1}.</span>
+                                                          <Input
+                                                            className="text-xs bg-white flex-grow"
+                                                            value={tweet}
+                                                            onChange={(e) => {
+                                                              if (editedPlan) {
+                                                                const newPlan = { ...editedPlan };
+                                                                if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft) {
+                                                                  newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {};
+                                                                }
+                                                                if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread) {
+                                                                  newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread = [];
+                                                                }
+                                                                newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread[tweetIndex] = e.target.value;
+                                                                setEditedPlan(newPlan);
+                                                              }
+                                                            }}
+                                                          />
+                                                          <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                                                            onClick={() => {
+                                                              if (editedPlan) {
+                                                                const newPlan = { ...editedPlan };
+                                                                if (newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft?.thread) {
+                                                                  newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread = 
+                                                                    newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread.filter((_, i) => i !== tweetIndex);
+                                                                }
+                                                                setEditedPlan(newPlan);
+                                                              }
+                                                            }}
+                                                          >
+                                                            <X className="w-3 h-3" />
+                                                          </Button>
+                                                        </div>
+                                                      ))}
+                                                      <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="text-xs h-7"
+                                                        onClick={() => {
+                                                          if (editedPlan) {
+                                                            const newPlan = { ...editedPlan };
+                                                            if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft) {
+                                                              newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {};
+                                                            }
+                                                            if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread) {
+                                                              newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread = [];
+                                                            }
+                                                            newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread.push('');
+                                                            setEditedPlan(newPlan);
+                                                          }
+                                                        }}
+                                                      >
+                                                        <Plus className="w-3 h-3 mr-1" />
+                                                        Add Tweet
+                                                      </Button>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
+                                              
+                                              {/* Add Post Draft Button - Only show if no post draft exists */}
+                                              {!task.postDraft && !editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex]?.postDraft && (
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  className="text-xs h-7 mt-2"
+                                                  onClick={() => {
+                                                    if (editedPlan) {
+                                                      const newPlan = { ...editedPlan };
+                                                      newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {
+                                                        title: '',
+                                                        body: '',
+                                                        thread: []
+                                                      };
+                                                      setEditedPlan(newPlan);
+                                                    }
+                                                  }}
+                                                >
+                                                  <Plus className="w-3 h-3 mr-1" />
+                                                  Add Social Media Post Draft
+                                                </Button>
+                                              )}
                                             </>
                                           ) : (
                                             <>
