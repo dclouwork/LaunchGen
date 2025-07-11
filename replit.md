@@ -165,3 +165,16 @@ Preferred communication style: Simple, everyday language.
      - Focus on providing value first, product second
      - Write conversationally with specific numbers and emotions
    - **Implementation**: Modified Stage 2 of AI pipeline to generate authentic, human-centered content that builds trust and engagement
+
+9. **Enhanced Draft Post Editing & Share Page PDF Download** (January 11, 2025):
+   - **Draft Post Editing**: Users can now edit social media post drafts when editing a plan:
+     - Edit existing post titles, body content, and Twitter threads
+     - Add new post drafts to tasks that don't have them
+     - Add or remove individual tweets from Twitter threads
+     - All changes are saved when clicking "Save Changes"
+   - **Share Page PDF Download**: Added PDF download functionality to shared plan pages:
+     - Download PDF button added next to Copy Plan button
+     - Uses same PDF generation logic as home page
+     - Automatically extracts plan title from overview
+     - Includes all plan details, social media drafts, tools, and KPIs
+   - **Implementation**: Extended edit mode functionality in home.tsx and added jsPDF integration to share.tsx

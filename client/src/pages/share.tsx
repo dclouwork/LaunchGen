@@ -3,11 +3,12 @@ import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChartLine, ChevronRight, ChevronDown, Calendar, Clock, Target, Wrench, Copy, Home } from "lucide-react";
+import { ChartLine, ChevronRight, ChevronDown, Calendar, Clock, Target, Wrench, Copy, Home, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { type LaunchPlanResponse } from "@shared/schema";
 import SEO from "@/components/SEO";
+import jsPDF from "jspdf";
 
 export default function SharePage() {
   const { token } = useParams();
@@ -46,6 +47,159 @@ export default function SharePage() {
       toast({
         title: "Error",
         description: "Failed to copy to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const downloadPDF = () => {
+    if (!plan) return;
+
+    try {
+      const pdf = new jsPDF();
+      const pageHeight = pdf.internal.pageSize.height;
+      const margin = 15;
+      let yPosition = margin;
+      const lineHeight = 7;
+      const maxWidth = pdf.internal.pageSize.width - 2 * margin;
+
+      // Helper function to add text with page breaks
+      const addTextWithPageBreak = (text: string, fontSize: number = 10, isBold: boolean = false) => {
+        pdf.setFontSize(fontSize);
+        pdf.setFont("helvetica", isBold ? "bold" : "normal");
+        
+        const lines = pdf.splitTextToSize(text, maxWidth);
+        
+        for (const line of lines) {
+          if (yPosition + lineHeight > pageHeight - margin) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += lineHeight;
+        }
+      };
+
+      // Extract title from plan overview or use default
+      const planTitle = plan.overview.split('.')[0] + " - 30-Day Launch Plan";
+
+      // Title
+      addTextWithPageBreak(planTitle, 20, true);
+      yPosition += 5;
+
+      // Overview
+      addTextWithPageBreak("Executive Summary", 14, true);
+      yPosition += 2;
+      addTextWithPageBreak(plan.overview, 10);
+      yPosition += 10;
+
+      // Weekly Plans
+      plan.weeklyPlan.forEach((week, weekIndex) => {
+        // Check if we need a new page for the week
+        if (yPosition + 30 > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        addTextWithPageBreak(week.title, 12, true);
+        addTextWithPageBreak(week.goal, 10);
+        yPosition += 5;
+
+        // Daily Tasks
+        week.dailyTasks.forEach((task) => {
+          if (yPosition + 20 > pageHeight - margin) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+
+          addTextWithPageBreak(`${task.day}: ${task.description}`, 10, true);
+          addTextWithPageBreak(`Time: ${task.timeEstimate} | Tool: ${task.tool} | KPI: ${task.kpi}`, 9);
+          
+          // Add post draft if exists
+          if (task.postDraft) {
+            yPosition += 3;
+            if (task.postDraft.title) {
+              addTextWithPageBreak(`Post Title: ${task.postDraft.title}`, 9, true);
+            }
+            if (task.postDraft.body) {
+              addTextWithPageBreak(`Post Body: ${task.postDraft.body}`, 9);
+            }
+            if (task.postDraft.thread && task.postDraft.thread.length > 0) {
+              addTextWithPageBreak("Thread:", 9, true);
+              task.postDraft.thread.forEach((tweet: string, index: number) => {
+                addTextWithPageBreak(`${index + 1}. ${tweet}`, 9);
+              });
+            }
+          }
+          
+          yPosition += 5;
+        });
+
+        // Reddit Tips
+        if (week.redditTips.length > 0) {
+          if (yPosition + 20 > pageHeight - margin) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          addTextWithPageBreak("Reddit Marketing Tips:", 10, true);
+          week.redditTips.forEach((tip) => {
+            addTextWithPageBreak(`• ${tip}`, 9);
+          });
+          yPosition += 5;
+        }
+      });
+
+      // Tools
+      if (yPosition + 30 > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
+      addTextWithPageBreak("Recommended Tools", 14, true);
+      yPosition += 3;
+      plan.recommendedTools.forEach((tool) => {
+        if (yPosition + 15 > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        addTextWithPageBreak(`${tool.name} - ${tool.purpose}`, 10, true);
+        addTextWithPageBreak(`Pricing: ${tool.pricing}`, 9);
+        yPosition += 5;
+      });
+
+      // KPIs
+      if (yPosition + 30 > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
+      addTextWithPageBreak("Key Performance Indicators", 14, true);
+      yPosition += 3;
+      plan.kpis.forEach((kpi) => {
+        if (yPosition + 15 > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        addTextWithPageBreak(`${kpi.metric}: ${kpi.target}`, 10, true);
+        addTextWithPageBreak(`Tracking: ${kpi.tracking}`, 9);
+        yPosition += 5;
+      });
+
+      // Save the PDF
+      const dateStr = new Date().toISOString().split('T')[0];
+      const sanitizedTitle = planTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
+      const fileName = `${sanitizedTitle}_${dateStr}.pdf`;
+      pdf.save(fileName);
+
+      toast({
+        title: "PDF Downloaded!",
+        description: "The launch plan has been saved as a PDF.",
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
         variant: "destructive",
       });
     }
@@ -128,10 +282,16 @@ export default function SharePage() {
                   <ChartLine className="text-[hsl(142,76%,36%)] w-5 h-5" />
                   <h3 className="text-xl font-semibold">30-Day Launch Plan</h3>
                 </div>
-                <Button variant="outline" size="sm" onClick={copyToClipboard}>
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy Plan
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Plan
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={downloadPDF}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </Button>
+                </div>
               </div>
 
               {/* Plan Summary */}
