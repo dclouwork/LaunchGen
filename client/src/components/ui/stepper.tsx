@@ -140,7 +140,7 @@ export function StepperProgress({
   totalSteps: number;
   className?: string;
 }) {
-  const percentage = Math.round((currentStep - 1) / totalSteps * 100);
+  const percentage = Math.round(currentStep / totalSteps * 100);
   
   return (
     <div className={cn("text-center", className)}>
