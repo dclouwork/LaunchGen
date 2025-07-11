@@ -868,11 +868,55 @@ export default function Home() {
                         
                         {expandedWeeks[weekIndex] && (
                           <div className="p-4 space-y-3">
+                            {/* Daily Tasks Header with Add Button */}
+                            {isEditMode && (
+                              <div className="flex justify-end mb-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (editedPlan) {
+                                      const newTask = {
+                                        day: `Day ${editedPlan.weeklyPlan[weekIndex].dailyTasks.length + 1}`,
+                                        description: "New task description",
+                                        timeEstimate: "1 hour",
+                                        tool: "Tool name",
+                                        kpi: "KPI metric"
+                                      };
+                                      const newPlan = { ...editedPlan };
+                                      newPlan.weeklyPlan[weekIndex].dailyTasks = [
+                                        ...newPlan.weeklyPlan[weekIndex].dailyTasks,
+                                        newTask
+                                      ];
+                                      setEditedPlan(newPlan);
+                                    }
+                                  }}
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Add Task
+                                </Button>
+                              </div>
+                            )}
+                            
                             {/* Daily Tasks */}
-                            {week.dailyTasks.map((task, taskIndex) => (
+                            {(isEditMode ? editedPlan?.weeklyPlan[weekIndex]?.dailyTasks || [] : week.dailyTasks).map((task, taskIndex) => (
                               <div key={taskIndex} className="flex items-start space-x-3 p-3 bg-muted rounded-lg">
                                 <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                  <span className="text-xs font-semibold text-primary">{task.day}</span>
+                                  {isEditMode ? (
+                                    <Input
+                                      className="w-full h-full text-center text-xs font-semibold text-primary bg-transparent border-0 p-0"
+                                      value={editedPlan?.weeklyPlan[weekIndex]?.dailyTasks[taskIndex]?.day || ''}
+                                      onChange={(e) => {
+                                        if (editedPlan) {
+                                          const newPlan = { ...editedPlan };
+                                          newPlan.weeklyPlan[weekIndex].dailyTasks[taskIndex].day = e.target.value;
+                                          setEditedPlan(newPlan);
+                                        }
+                                      }}
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-semibold text-primary">{task.day}</span>
+                                  )}
                                 </div>
                                 <div className="flex-grow">
                                   {isEditMode ? (
@@ -938,6 +982,22 @@ export default function Home() {
                                     </>
                                   )}
                                 </div>
+                                {isEditMode && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-destructive hover:text-destructive flex-shrink-0"
+                                    onClick={() => {
+                                      if (editedPlan) {
+                                        const newPlan = { ...editedPlan };
+                                        newPlan.weeklyPlan[weekIndex].dailyTasks = newPlan.weeklyPlan[weekIndex].dailyTasks.filter((_, i) => i !== taskIndex);
+                                        setEditedPlan(newPlan);
+                                      }
+                                    }}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                )}
                               </div>
                             ))}
 
