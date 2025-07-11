@@ -36,6 +36,33 @@ export default function Home() {
   const [editedPlanTitle, setEditedPlanTitle] = useState("Your 30-Day Launch Plan");
   const { toast } = useToast();
 
+  // Function to extract business name from executive summary
+  const extractBusinessName = (overview: string): string | null => {
+    // Common patterns for business names in executive summaries
+    const patterns = [
+      /^([A-Z][A-Za-z0-9\s&'-]+)\s+is\s+/,
+      /^([A-Z][A-Za-z0-9\s&'-]+)\s+will\s+/,
+      /^([A-Z][A-Za-z0-9\s&'-]+)\s+aims\s+/,
+      /^([A-Z][A-Za-z0-9\s&'-]+)\s+provides\s+/,
+      /^([A-Z][A-Za-z0-9\s&'-]+)\s+offers\s+/,
+      /Launch\s+([A-Z][A-Za-z0-9\s&'-]+)\s+as\s+/,
+      /Build\s+([A-Z][A-Za-z0-9\s&'-]+)\s+as\s+/,
+      /Create\s+([A-Z][A-Za-z0-9\s&'-]+)\s+as\s+/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = overview.match(pattern);
+      if (match && match[1]) {
+        const businessName = match[1].trim();
+        // Avoid generic terms
+        if (!['This', 'The', 'A', 'An', 'Our'].includes(businessName)) {
+          return businessName;
+        }
+      }
+    }
+    return null;
+  };
+
   const form = useForm<BusinessInfo>({
     resolver: zodResolver(businessInfoSchema),
     defaultValues: {
@@ -72,6 +99,15 @@ export default function Home() {
         setGeneratedPlan(data.plan);
         setPlanId(data.planId);
         setEditedPlan(data.plan);
+        
+        // Extract business name and set plan title
+        const businessName = extractBusinessName(data.plan.overview);
+        if (businessName) {
+          const newTitle = `${businessName} - 30-Day Launch Plan`;
+          setPlanTitle(newTitle);
+          setEditedPlanTitle(newTitle);
+        }
+        
         toast({
           title: "Success!",
           description: "Your 30-day launch plan has been generated.",
@@ -117,6 +153,15 @@ export default function Home() {
         setGeneratedPlan(data.plan);
         setPlanId(data.planId);
         setEditedPlan(data.plan);
+        
+        // Extract business name and set plan title
+        const businessName = extractBusinessName(data.plan.overview);
+        if (businessName) {
+          const newTitle = `${businessName} - 30-Day Launch Plan`;
+          setPlanTitle(newTitle);
+          setEditedPlanTitle(newTitle);
+        }
+        
         toast({
           title: "Success!",
           description: "Your business plan PDF has been processed and launch plan generated.",

@@ -112,3 +112,15 @@ Preferred communication style: Simple, everyday language.
 4. **Component-based UI**: Used Shadcn/ui for consistent, accessible components that can be easily customized while maintaining design system coherence
 
 5. **Type Safety**: Comprehensive TypeScript usage with Zod validation ensures data integrity from frontend forms through database storage
+
+6. **Smart Business Name Extraction**: Automatically extracts business names from executive summaries and uses them in plan titles for better personalization
+
+### Recent Changes (January 11, 2025)
+
+1. **Enhanced Share Functionality**: Added share dialog functionality to the "Ready to Launch?" section share button, matching the behavior of the toolbar share button
+
+2. **Editable Plan Titles**: Users can now edit plan titles by clicking the Edit button and modifying the title field directly
+
+3. **Custom PDF Filenames**: PDF downloads now use the custom plan title and current date (format: BusinessName_2025-01-11.pdf)
+
+4. **Automatic Business Name Detection**: When a plan is generated, the system automatically extracts the business name from the executive summary and sets it as the plan title
