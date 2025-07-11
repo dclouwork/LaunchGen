@@ -29,10 +29,8 @@ export default function CommunityFeedback() {
   // Create feedback mutation
   const createFeedbackMutation = useMutation({
     mutationFn: async (data: { name?: string; startupName?: string; domain?: string; feedback: string }) => {
-      return apiRequest('/api/feedback', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('POST', '/api/feedback', data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/feedback'] });
@@ -58,10 +56,8 @@ export default function CommunityFeedback() {
   // Vote mutation
   const voteMutation = useMutation({
     mutationFn: async ({ feedbackId, voteType }: { feedbackId: number; voteType: 'upvote' | 'downvote' }) => {
-      return apiRequest(`/api/feedback/${feedbackId}/vote`, {
-        method: 'POST',
-        body: JSON.stringify({ voteType }),
-      });
+      const response = await apiRequest('POST', `/api/feedback/${feedbackId}/vote`, { voteType });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/feedback'] });
