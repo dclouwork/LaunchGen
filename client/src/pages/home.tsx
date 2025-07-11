@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { businessInfoSchema, type BusinessInfo, type LaunchPlanResponse } from "@shared/schema";
 import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Calendar, Share, Clock, Target, Wrench, ChevronDown, ChevronRight } from "lucide-react";
+import jsPDF from "jspdf";
 
 export default function Home() {
   const [inputMethod, setInputMethod] = useState<'text' | 'pdf'>('text');
@@ -162,6 +163,135 @@ export default function Home() {
       toast({
         title: "Error",
         description: "Failed to copy to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const downloadPDF = () => {
+    if (!generatedPlan) return;
+
+    try {
+      const pdf = new jsPDF();
+      const pageHeight = pdf.internal.pageSize.height;
+      const margin = 15;
+      let yPosition = margin;
+      const lineHeight = 7;
+      const maxWidth = pdf.internal.pageSize.width - 2 * margin;
+
+      // Helper function to add text with page breaks
+      const addTextWithPageBreak = (text: string, fontSize: number = 10, isBold: boolean = false) => {
+        pdf.setFontSize(fontSize);
+        pdf.setFont("helvetica", isBold ? "bold" : "normal");
+        
+        const lines = pdf.splitTextToSize(text, maxWidth);
+        
+        for (const line of lines) {
+          if (yPosition + lineHeight > pageHeight - margin) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += lineHeight;
+        }
+      };
+
+      // Title
+      addTextWithPageBreak("30-Day Business Launch Plan", 20, true);
+      yPosition += 5;
+
+      // Overview
+      addTextWithPageBreak("Executive Summary", 14, true);
+      yPosition += 2;
+      addTextWithPageBreak(generatedPlan.overview, 10);
+      yPosition += 10;
+
+      // Weekly Plans
+      generatedPlan.weeklyPlan.forEach((week, weekIndex) => {
+        // Check if we need a new page for the week
+        if (yPosition + 30 > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        // Week Title
+        addTextWithPageBreak(`${week.title}`, 12, true);
+        addTextWithPageBreak(`Goal: ${week.goal}`, 10);
+        yPosition += 5;
+
+        // Daily Tasks
+        week.dailyTasks.forEach((task) => {
+          if (yPosition + 20 > pageHeight - margin) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+
+          addTextWithPageBreak(`${task.day}: ${task.description}`, 10, true);
+          addTextWithPageBreak(`Time: ${task.timeEstimate} | Tool: ${task.tool}`, 9);
+          addTextWithPageBreak(`KPI: ${task.kpi}`, 9);
+          yPosition += 3;
+        });
+
+        // Reddit Tips
+        if (week.redditTips && week.redditTips.length > 0) {
+          addTextWithPageBreak("Reddit Marketing Tips:", 10, true);
+          week.redditTips.forEach((tip) => {
+            addTextWithPageBreak(`• ${tip}`, 9);
+          });
+        }
+        yPosition += 8;
+      });
+
+      // Add new page for tools and KPIs
+      pdf.addPage();
+      yPosition = margin;
+
+      // Recommended Tools
+      addTextWithPageBreak("Recommended Tools", 14, true);
+      yPosition += 3;
+      generatedPlan.recommendedTools.forEach((tool) => {
+        if (yPosition + 15 > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        addTextWithPageBreak(`${tool.name} - ${tool.pricing}`, 10, true);
+        addTextWithPageBreak(`${tool.purpose}`, 9);
+        yPosition += 5;
+      });
+
+      yPosition += 10;
+
+      // KPIs
+      if (yPosition + 30 > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
+      addTextWithPageBreak("Key Performance Indicators", 14, true);
+      yPosition += 3;
+      generatedPlan.kpis.forEach((kpi) => {
+        if (yPosition + 15 > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        addTextWithPageBreak(`${kpi.metric}: ${kpi.target}`, 10, true);
+        addTextWithPageBreak(`Tracking: ${kpi.tracking}`, 9);
+        yPosition += 5;
+      });
+
+      // Save the PDF
+      const fileName = `LaunchPlan_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+
+      toast({
+        title: "PDF Downloaded!",
+        description: "Your launch plan has been saved as a PDF.",
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
         variant: "destructive",
       });
     }
@@ -549,7 +679,7 @@ export default function Home() {
                   Your plan is ready! Start with Day 1 and follow the structured approach to turn your idea into reality.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <Button variant="secondary" size="sm">
+                  <Button variant="secondary" size="sm" onClick={downloadPDF}>
                     <Download className="w-4 h-4 mr-2" />
                     Download PDF
                   </Button>
