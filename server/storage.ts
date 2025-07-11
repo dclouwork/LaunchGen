@@ -1,6 +1,19 @@
-import { users, launchPlans, type User, type InsertUser, type LaunchPlan, type InsertLaunchPlan } from "@shared/schema";
+import { 
+  users, 
+  launchPlans, 
+  communityFeedback,
+  feedbackVotes,
+  type User, 
+  type InsertUser, 
+  type LaunchPlan, 
+  type InsertLaunchPlan,
+  type CommunityFeedback,
+  type InsertCommunityFeedback,
+  type FeedbackVote,
+  type InsertFeedbackVote
+} from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -11,19 +24,34 @@ export interface IStorage {
   getLaunchPlanByShareToken(shareToken: string): Promise<LaunchPlan | undefined>;
   updateLaunchPlan(id: number, updates: Partial<InsertLaunchPlan>): Promise<LaunchPlan | undefined>;
   getUserLaunchPlans(userId: number): Promise<LaunchPlan[]>;
+  
+  // Community Feedback methods
+  createFeedback(feedback: InsertCommunityFeedback): Promise<CommunityFeedback>;
+  getFeedback(id: number): Promise<CommunityFeedback | undefined>;
+  getAllFeedback(): Promise<CommunityFeedback[]>;
+  voteFeedback(feedbackId: number, userIdentifier: string, voteType: 'upvote' | 'downvote'): Promise<void>;
+  getUserVote(feedbackId: number, userIdentifier: string): Promise<FeedbackVote | undefined>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private launchPlans: Map<number, LaunchPlan>;
+  private communityFeedback: Map<number, CommunityFeedback>;
+  private feedbackVotes: Map<number, FeedbackVote>;
   private currentUserId: number;
   private currentPlanId: number;
+  private currentFeedbackId: number;
+  private currentVoteId: number;
 
   constructor() {
     this.users = new Map();
     this.launchPlans = new Map();
+    this.communityFeedback = new Map();
+    this.feedbackVotes = new Map();
     this.currentUserId = 1;
     this.currentPlanId = 1;
+    this.currentFeedbackId = 1;
+    this.currentVoteId = 1;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -84,6 +112,78 @@ export class MemStorage implements IStorage {
       (plan) => plan.userId === userId
     );
   }
+
+  async createFeedback(insertFeedback: InsertCommunityFeedback): Promise<CommunityFeedback> {
+    const id = this.currentFeedbackId++;
+    const feedback: CommunityFeedback = {
+      ...insertFeedback,
+      id,
+      upvotes: 0,
+      downvotes: 0,
+      createdAt: new Date()
+    };
+    this.communityFeedback.set(id, feedback);
+    return feedback;
+  }
+
+  async getFeedback(id: number): Promise<CommunityFeedback | undefined> {
+    return this.communityFeedback.get(id);
+  }
+
+  async getAllFeedback(): Promise<CommunityFeedback[]> {
+    return Array.from(this.communityFeedback.values()).sort((a, b) => 
+      b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  }
+
+  async voteFeedback(feedbackId: number, userIdentifier: string, voteType: 'upvote' | 'downvote'): Promise<void> {
+    const feedback = this.communityFeedback.get(feedbackId);
+    if (!feedback) return;
+
+    // Check if user has already voted
+    const existingVote = Array.from(this.feedbackVotes.values()).find(
+      vote => vote.feedbackId === feedbackId && vote.userIdentifier === userIdentifier
+    );
+
+    if (existingVote) {
+      // Update existing vote
+      if (existingVote.voteType !== voteType) {
+        // Change vote type
+        if (existingVote.voteType === 'upvote') {
+          feedback.upvotes--;
+          feedback.downvotes++;
+        } else {
+          feedback.downvotes--;
+          feedback.upvotes++;
+        }
+        existingVote.voteType = voteType;
+      }
+    } else {
+      // Create new vote
+      const id = this.currentVoteId++;
+      const vote: FeedbackVote = {
+        id,
+        feedbackId,
+        userIdentifier,
+        voteType,
+        createdAt: new Date()
+      };
+      this.feedbackVotes.set(id, vote);
+
+      // Update feedback counts
+      if (voteType === 'upvote') {
+        feedback.upvotes++;
+      } else {
+        feedback.downvotes++;
+      }
+    }
+  }
+
+  async getUserVote(feedbackId: number, userIdentifier: string): Promise<FeedbackVote | undefined> {
+    return Array.from(this.feedbackVotes.values()).find(
+      vote => vote.feedbackId === feedbackId && vote.userIdentifier === userIdentifier
+    );
+  }
 }
 
 // Database storage implementation
@@ -138,6 +238,100 @@ export class DatabaseStorage implements IStorage {
 
   async getUserLaunchPlans(userId: number): Promise<LaunchPlan[]> {
     return await db.select().from(launchPlans).where(eq(launchPlans.userId, userId));
+  }
+
+  async createFeedback(insertFeedback: InsertCommunityFeedback): Promise<CommunityFeedback> {
+    const [feedback] = await db
+      .insert(communityFeedback)
+      .values(insertFeedback)
+      .returning();
+    return feedback;
+  }
+
+  async getFeedback(id: number): Promise<CommunityFeedback | undefined> {
+    const [feedback] = await db.select().from(communityFeedback).where(eq(communityFeedback.id, id));
+    return feedback || undefined;
+  }
+
+  async getAllFeedback(): Promise<CommunityFeedback[]> {
+    return await db.select().from(communityFeedback).orderBy(desc(communityFeedback.createdAt));
+  }
+
+  async voteFeedback(feedbackId: number, userIdentifier: string, voteType: 'upvote' | 'downvote'): Promise<void> {
+    // Check if user has already voted
+    const [existingVote] = await db
+      .select()
+      .from(feedbackVotes)
+      .where(
+        and(
+          eq(feedbackVotes.feedbackId, feedbackId),
+          eq(feedbackVotes.userIdentifier, userIdentifier)
+        )
+      );
+
+    if (existingVote) {
+      // Update existing vote if different
+      if (existingVote.voteType !== voteType) {
+        await db
+          .update(feedbackVotes)
+          .set({ voteType })
+          .where(eq(feedbackVotes.id, existingVote.id));
+
+        // Update feedback counts
+        if (voteType === 'upvote') {
+          await db
+            .update(communityFeedback)
+            .set({
+              upvotes: db.sql`${communityFeedback.upvotes} + 1`,
+              downvotes: db.sql`${communityFeedback.downvotes} - 1`
+            })
+            .where(eq(communityFeedback.id, feedbackId));
+        } else {
+          await db
+            .update(communityFeedback)
+            .set({
+              upvotes: db.sql`${communityFeedback.upvotes} - 1`,
+              downvotes: db.sql`${communityFeedback.downvotes} + 1`
+            })
+            .where(eq(communityFeedback.id, feedbackId));
+        }
+      }
+    } else {
+      // Create new vote
+      await db
+        .insert(feedbackVotes)
+        .values({
+          feedbackId,
+          userIdentifier,
+          voteType
+        });
+
+      // Update feedback count
+      if (voteType === 'upvote') {
+        await db
+          .update(communityFeedback)
+          .set({ upvotes: db.sql`${communityFeedback.upvotes} + 1` })
+          .where(eq(communityFeedback.id, feedbackId));
+      } else {
+        await db
+          .update(communityFeedback)
+          .set({ downvotes: db.sql`${communityFeedback.downvotes} + 1` })
+          .where(eq(communityFeedback.id, feedbackId));
+      }
+    }
+  }
+
+  async getUserVote(feedbackId: number, userIdentifier: string): Promise<FeedbackVote | undefined> {
+    const [vote] = await db
+      .select()
+      .from(feedbackVotes)
+      .where(
+        and(
+          eq(feedbackVotes.feedbackId, feedbackId),
+          eq(feedbackVotes.userIdentifier, userIdentifier)
+        )
+      );
+    return vote || undefined;
   }
 }
 

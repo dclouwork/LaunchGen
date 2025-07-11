@@ -225,6 +225,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Community Feedback Routes
+  
+  // Get all feedback
+  app.get("/api/feedback", async (req, res) => {
+    try {
+      const allFeedback = await storage.getAllFeedback();
+      
+      // If user has a session ID, get their votes
+      const userIdentifier = req.session?.id || req.sessionID;
+      const feedbackWithVotes = await Promise.all(
+        allFeedback.map(async (feedback) => {
+          const userVote = userIdentifier 
+            ? await storage.getUserVote(feedback.id, userIdentifier)
+            : undefined;
+          return {
+            ...feedback,
+            userVote: userVote?.voteType
+          };
+        })
+      );
+      
+      res.json({
+        success: true,
+        feedback: feedbackWithVotes
+      });
+    } catch (error) {
+      console.error("Get feedback error:", error);
+      res.status(400).json({
+        success: false,
+        error: "Failed to retrieve feedback"
+      });
+    }
+  });
+
+  // Create new feedback
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      const { name, startupName, domain, feedback } = req.body;
+      
+      // Generate anonymous name if not provided
+      const feedbackName = name || generateAnonymousName();
+      
+      const newFeedback = await storage.createFeedback({
+        name: feedbackName,
+        startupName: startupName || null,
+        domain: domain || null,
+        feedback
+      });
+      
+      res.json({
+        success: true,
+        feedback: newFeedback
+      });
+    } catch (error) {
+      console.error("Create feedback error:", error);
+      res.status(400).json({
+        success: false,
+        error: "Failed to create feedback"
+      });
+    }
+  });
+
+  // Vote on feedback
+  app.post("/api/feedback/:id/vote", async (req, res) => {
+    try {
+      const feedbackId = parseInt(req.params.id);
+      const { voteType } = req.body;
+      
+      if (voteType !== 'upvote' && voteType !== 'downvote') {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid vote type"
+        });
+      }
+      
+      const userIdentifier = req.session?.id || req.sessionID;
+      if (!userIdentifier) {
+        return res.status(400).json({
+          success: false,
+          error: "Session required for voting"
+        });
+      }
+      
+      await storage.voteFeedback(feedbackId, userIdentifier, voteType);
+      
+      res.json({
+        success: true
+      });
+    } catch (error) {
+      console.error("Vote feedback error:", error);
+      res.status(400).json({
+        success: false,
+        error: "Failed to vote on feedback"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Helper function to generate anonymous names
+function generateAnonymousName(): string {
+  const adjectives = [
+    'Anonymous', 'Creative', 'Innovative', 'Strategic', 'Curious',
+    'Ambitious', 'Visionary', 'Dedicated', 'Inspired', 'Dynamic'
+  ];
+  const nouns = [
+    'Founder', 'Entrepreneur', 'Builder', 'Creator', 'Innovator',
+    'Maker', 'Pioneer', 'Visionary', 'Developer', 'Strategist'
+  ];
+  const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  return `${adjective} ${noun}`;
 }

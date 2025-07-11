@@ -20,6 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { businessInfoSchema, type BusinessInfo, type LaunchPlanResponse } from "@shared/schema";
 import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Calendar, Share, Clock, Target, Wrench, ChevronDown, ChevronRight, Save, X, Share2, Plus } from "lucide-react";
 import jsPDF from "jspdf";
+import CommunityFeedback from "@/components/CommunityFeedback";
 
 export default function Home() {
   const [inputMethod, setInputMethod] = useState<'text' | 'pdf'>('text');
@@ -1340,6 +1341,11 @@ export default function Home() {
               </div>
             </div>
           )}
+
+          {/* Community Feedback Section */}
+          <div className="mt-16">
+            <CommunityFeedback />
+          </div>
         </div>
       </main>
 

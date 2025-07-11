@@ -20,6 +20,25 @@ export const launchPlans = pgTable("launch_plans", {
   isEditable: boolean("is_editable").notNull().default(true),
 });
 
+export const communityFeedback = pgTable("community_feedback", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  startupName: text("startup_name"),
+  domain: text("domain"),
+  feedback: text("feedback").notNull(),
+  upvotes: integer("upvotes").notNull().default(0),
+  downvotes: integer("downvotes").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const feedbackVotes = pgTable("feedback_votes", {
+  id: serial("id").primaryKey(),
+  feedbackId: integer("feedback_id").notNull().references(() => communityFeedback.id),
+  userIdentifier: text("user_identifier").notNull(), // session-based identifier
+  voteType: text("vote_type").notNull(), // 'upvote' or 'downvote'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   launchPlans: many(launchPlans),
@@ -29,6 +48,17 @@ export const launchPlansRelations = relations(launchPlans, ({ one }) => ({
   user: one(users, {
     fields: [launchPlans.userId],
     references: [users.id],
+  }),
+}));
+
+export const communityFeedbackRelations = relations(communityFeedback, ({ many }) => ({
+  votes: many(feedbackVotes),
+}));
+
+export const feedbackVotesRelations = relations(feedbackVotes, ({ one }) => ({
+  feedback: one(communityFeedback, {
+    fields: [feedbackVotes.feedbackId],
+    references: [communityFeedback.id],
   }),
 }));
 
@@ -45,6 +75,19 @@ export const insertLaunchPlanSchema = createInsertSchema(launchPlans).pick({
   updatedAt: true,
   shareToken: true,
   isEditable: true,
+});
+
+export const insertCommunityFeedbackSchema = createInsertSchema(communityFeedback).pick({
+  name: true,
+  startupName: true,
+  domain: true,
+  feedback: true,
+});
+
+export const insertFeedbackVoteSchema = createInsertSchema(feedbackVotes).pick({
+  feedbackId: true,
+  userIdentifier: true,
+  voteType: true,
 });
 
 export const businessInfoSchema = z.object({
@@ -90,3 +133,7 @@ export type InsertLaunchPlan = z.infer<typeof insertLaunchPlanSchema>;
 export type LaunchPlan = typeof launchPlans.$inferSelect;
 export type BusinessInfo = z.infer<typeof businessInfoSchema>;
 export type LaunchPlanResponse = z.infer<typeof launchPlanResponse>;
+export type InsertCommunityFeedback = z.infer<typeof insertCommunityFeedbackSchema>;
+export type CommunityFeedback = typeof communityFeedback.$inferSelect;
+export type InsertFeedbackVote = z.infer<typeof insertFeedbackVoteSchema>;
+export type FeedbackVote = typeof feedbackVotes.$inferSelect;
