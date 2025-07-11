@@ -51,7 +51,7 @@ Preferred communication style: Simple, everyday language.
 1. **User Input**: User fills out business information form or uploads PDF
 2. **Validation**: Frontend validates input using Zod schemas before submission
 3. **API Request**: Data sent to backend API endpoint (/api/generate-plan or /api/generate-plan-pdf)
-4. **PDF Processing**: If PDF uploaded, text is extracted using OpenAI's capabilities
+4. **PDF Processing**: If PDF uploaded, text is extracted using pdf-parse library, then summarized using OpenAI
 5. **AI Generation**: OpenAI API called with structured prompt to generate launch plan
 6. **Storage**: Generated plan stored in database with unique ID
 7. **Response**: Structured JSON response returned to frontend
@@ -66,6 +66,8 @@ Preferred communication style: Simple, everyday language.
 - **react-hook-form**: Form handling and validation
 - **zod**: Runtime type validation
 - **openai**: Official OpenAI API client
+- **pdf-parse**: PDF text extraction library
+- **multer**: File upload handling middleware
 
 ### UI Dependencies
 - **@radix-ui/***: Comprehensive set of headless UI components

@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import pdf from "pdf-parse";
 import type { BusinessInfo, LaunchPlanResponse } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -106,35 +107,35 @@ Respond ONLY with valid JSON. Use this schema as a **guide**;
 
 export async function extractTextFromPDF(base64Data: string): Promise<string> {
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "Extract and summarize the key business information from this PDF document. Focus on business idea, target market, industry, goals, and any other relevant details for creating a launch plan."
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Please extract the business information from this PDF document:"
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:application/pdf;base64,${base64Data}`
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: 1500
-    });
+    // Convert base64 to buffer
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Parse PDF to extract text
+    const data = await pdf(buffer);
+    
+    // If we got text from the PDF, summarize it using OpenAI
+    if (data.text && data.text.trim().length > 0) {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "Extract and summarize the key business information from this text. Focus on business idea, target market, industry, goals, and any other relevant details for creating a launch plan. Keep it concise but comprehensive."
+          },
+          {
+            role: "user",
+            content: `Please extract the business information from this document:\n\n${data.text}`
+          }
+        ],
+        max_tokens: 1500
+      });
 
-    return response.choices[0].message.content || "";
+      return response.choices[0].message.content || "";
+    } else {
+      throw new Error("No text content found in PDF");
+    }
   } catch (error) {
     console.error("PDF extraction error:", error);
-    throw new Error("Failed to extract text from PDF");
+    throw new Error("Failed to extract text from PDF: " + (error instanceof Error ? error.message : "Unknown error"));
   }
 }
