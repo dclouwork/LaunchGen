@@ -1,0 +1,70 @@
+~/workspace$ npx tsc --noEmit
+client/src/pages/home.tsx:1189:59 - error TS2532: Object is possibly 'undefined'.
+
+1189                                                           newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.title = e.target.value;
+                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1210:59 - error TS2532: Object is possibly 'undefined'.
+
+1210                                                           newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.body = e.target.value;
+                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1233:70 - error TS2532: Object is possibly 'undefined'.
+
+1233                                                                 if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread) {
+                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1234:67 - error TS2532: Object is possibly 'undefined'.
+
+1234                                                                   newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread = [];
+                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1236:65 - error TS2532: Object is possibly 'undefined'.
+
+1236                                                                 newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread[tweetIndex] = e.target.value;
+                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1236:65 - error TS2532: Object is possibly 'undefined'.
+
+1236                                                                 newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread[tweetIndex] = e.target.value;
+                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1249:67 - error TS2532: Object is possibly 'undefined'.
+
+1249                                                                   newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread =
+                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1250:69 - error TS2532: Object is possibly 'undefined'.
+
+1250                                                                     newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread.filter((_, i) => i !== tweetIndex);
+                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1250:69 - error TS2532: Object is possibly 'undefined'.
+
+1250                                                                     newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread.filter((_, i) => i !== tweetIndex);
+                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1270:66 - error TS2532: Object is possibly 'undefined'.
+
+1270                                                             if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread) {
+                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1271:63 - error TS2532: Object is possibly 'undefined'.
+
+1271                                                               newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread = [];
+                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1273:61 - error TS2532: Object is possibly 'undefined'.
+
+1273                                                             newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread.push('');
+                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+client/src/pages/home.tsx:1273:61 - error TS2532: Object is possibly 'undefined'.
+
+1273                                                             newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread.push('');
+                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Found 13 errors in the same file, starting at: client/src/pages/home.tsx:1189
+
+~/workspace$ 
