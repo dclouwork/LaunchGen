@@ -504,6 +504,7 @@ export default function Home() {
                     setPdfFile(null); // Clear PDF file when switching
                   }}
                   className="text-sm font-medium"
+                  disabled={isLoading}
                 >
                   Text Input
                 </Button>
@@ -515,6 +516,7 @@ export default function Home() {
                     setInputMethod('pdf');
                   }}
                   className="text-sm font-medium"
+                  disabled={isLoading}
                 >
                   PDF Upload
                 </Button>
@@ -530,6 +532,7 @@ export default function Home() {
                       placeholder="Describe your business idea, target market, and value proposition..."
                       className="mt-2"
                       rows={4}
+                      disabled={isLoading}
                       {...form.register("businessIdea")}
                     />
                     {form.formState.errors.businessIdea && (
@@ -544,6 +547,7 @@ export default function Home() {
                         id="industry"
                         placeholder="e.g., SaaS, E-commerce, Consulting"
                         className="mt-2"
+                        disabled={isLoading}
                         {...form.register("industry")}
                       />
                       {form.formState.errors.industry && (
@@ -556,6 +560,7 @@ export default function Home() {
                         id="targetMarket"
                         placeholder="e.g., Small businesses, Millennials"
                         className="mt-2"
+                        disabled={isLoading}
                         {...form.register("targetMarket")}
                       />
                       {form.formState.errors.targetMarket && (
@@ -567,7 +572,7 @@ export default function Home() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="timeCommitment">Time Commitment (hours/week)</Label>
-                      <Select onValueChange={(value) => form.setValue("timeCommitment", value)} defaultValue={form.getValues("timeCommitment")}>
+                      <Select onValueChange={(value) => form.setValue("timeCommitment", value)} defaultValue={form.getValues("timeCommitment")} disabled={isLoading}>
                         <SelectTrigger className="mt-2">
                           <SelectValue />
                         </SelectTrigger>
@@ -581,7 +586,7 @@ export default function Home() {
                     </div>
                     <div>
                       <Label htmlFor="budget">Budget Range</Label>
-                      <Select onValueChange={(value) => form.setValue("budget", value)} defaultValue={form.getValues("budget")}>
+                      <Select onValueChange={(value) => form.setValue("budget", value)} defaultValue={form.getValues("budget")} disabled={isLoading}>
                         <SelectTrigger className="mt-2">
                           <SelectValue />
                         </SelectTrigger>
@@ -602,6 +607,7 @@ export default function Home() {
                       placeholder="Any specific goals, constraints, or requirements for your launch plan..."
                       className="mt-2"
                       rows={3}
+                      disabled={isLoading}
                       {...form.register("additionalDetails")}
                     />
                   </div>
@@ -691,6 +697,7 @@ export default function Home() {
                           id="pdf-industry"
                           placeholder="e.g., SaaS, E-commerce, Consulting"
                           className="mt-2"
+                          disabled={isLoading}
                           {...pdfForm.register("industry")}
                         />
                         {pdfForm.formState.errors.industry && (
@@ -703,6 +710,7 @@ export default function Home() {
                           id="pdf-targetMarket"
                           placeholder="e.g., Small businesses, Millennials"
                           className="mt-2"
+                          disabled={isLoading}
                           {...pdfForm.register("targetMarket")}
                         />
                         {pdfForm.formState.errors.targetMarket && (
@@ -714,7 +722,7 @@ export default function Home() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="pdf-timeCommitment">Time Commitment (hours/week)</Label>
-                        <Select onValueChange={(value) => pdfForm.setValue("timeCommitment", value)} defaultValue={pdfForm.getValues("timeCommitment")}>
+                        <Select onValueChange={(value) => pdfForm.setValue("timeCommitment", value)} defaultValue={pdfForm.getValues("timeCommitment")} disabled={isLoading}>
                           <SelectTrigger className="mt-2">
                             <SelectValue />
                           </SelectTrigger>
@@ -728,7 +736,7 @@ export default function Home() {
                       </div>
                       <div>
                         <Label htmlFor="pdf-budget">Budget Range</Label>
-                        <Select onValueChange={(value) => pdfForm.setValue("budget", value)} defaultValue={pdfForm.getValues("budget")}>
+                        <Select onValueChange={(value) => pdfForm.setValue("budget", value)} defaultValue={pdfForm.getValues("budget")} disabled={isLoading}>
                           <SelectTrigger className="mt-2">
                             <SelectValue />
                           </SelectTrigger>
@@ -749,6 +757,7 @@ export default function Home() {
                         placeholder="Any specific goals, constraints, or requirements for your launch plan..."
                         className="mt-2"
                         rows={3}
+                        disabled={isLoading}
                         {...pdfForm.register("additionalDetails")}
                       />
                     </div>
