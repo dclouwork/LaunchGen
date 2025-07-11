@@ -53,6 +53,14 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
-    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+    <script>
+      // Only load Replit dev banner in development
+      if (location.hostname === 'localhost' || location.hostname.includes('.replit.dev')) {
+        const script = document.createElement('script');
+        script.src = 'https://replit.com/public/js/replit-dev-banner.js';
+        script.type = 'text/javascript';
+        document.head.appendChild(script);
+      }
+    </script>
   </body>
 </html>

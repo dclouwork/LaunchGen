@@ -36,7 +36,19 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Security middleware - Helmet sets various HTTP headers
 app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://us-assets.i.posthog.com"],
+      connectSrc: ["'self'", "https://us.i.posthog.com", "https://us-assets.i.posthog.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"]
+    }
+  } : false,
   crossOriginEmbedderPolicy: false
 }));
 

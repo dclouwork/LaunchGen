@@ -231,3 +231,18 @@ Preferred communication style: Simple, everyday language.
      - Added usePostHog hook to home.tsx and share.tsx components
      - Added posthog.capture() calls in mutation success handlers and key functions
      - Included relevant metadata with each event for better analytics insights
+
+13. **Production Security Fixes** (January 11, 2025): Resolved critical Content Security Policy issues affecting PostHog analytics and Replit development features:
+   - **CSP Configuration**: Fixed overly restrictive CSP policy that was blocking all external scripts and connections:
+     - Added specific PostHog domains to scriptSrc and connectSrc directives
+     - Maintained security while allowing PostHog analytics to function in production
+     - Configured proper CSP directives including unsafe-inline for necessary inline scripts
+   - **Development vs Production Scripts**: Made Replit dev banner conditional to prevent CSP violations:
+     - Banner script now only loads on localhost and .replit.dev domains
+     - Eliminates "Refused to load script" errors in production
+     - Reduces unnecessary external script loading in production environment
+   - **Analytics Restoration**: PostHog analytics now fully functional in production with proper CSP permissions
+   - **Implementation Details**:
+     - Modified `server/index.ts` Helmet CSP configuration with specific domain allowlists
+     - Updated `client/index.html` to conditionally load Replit banner based on hostname
+     - Resolved all "Refused to connect" and "Refused to load script" console errors
