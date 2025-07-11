@@ -18,7 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { businessInfoSchema, type BusinessInfo, type LaunchPlanResponse } from "@shared/schema";
-import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Calendar, Share, Clock, Target, Wrench, ChevronDown, ChevronRight, Save, X, Share2 } from "lucide-react";
+import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Calendar, Share, Clock, Target, Wrench, ChevronDown, ChevronRight, Save, X, Share2, Plus } from "lucide-react";
 import jsPDF from "jspdf";
 
 export default function Home() {
@@ -964,21 +964,106 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="shadow-sm">
                   <CardContent className="p-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <Wrench className="text-secondary w-5 h-5" />
-                      <h4 className="text-lg font-semibold">Recommended Tools</h4>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <Wrench className="text-secondary w-5 h-5" />
+                        <h4 className="text-lg font-semibold">Recommended Tools</h4>
+                      </div>
+                      {isEditMode && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            if (editedPlan) {
+                              const newTool = {
+                                name: "New Tool",
+                                purpose: "Tool purpose",
+                                pricing: "Free / Paid"
+                              };
+                              setEditedPlan({
+                                ...editedPlan,
+                                recommendedTools: [...editedPlan.recommendedTools, newTool]
+                              });
+                            }
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add Tool
+                        </Button>
+                      )}
                     </div>
                     <div className="space-y-3">
-                      {generatedPlan.recommendedTools.map((tool, index) => (
+                      {(isEditMode ? editedPlan?.recommendedTools || [] : generatedPlan.recommendedTools).map((tool, index) => (
                         <div key={index} className="flex items-start space-x-3 p-3 bg-muted rounded-lg">
                           <div className="flex-shrink-0 w-8 h-8 bg-secondary/10 rounded-full flex items-center justify-center">
                             <Wrench className="text-secondary w-4 h-4" />
                           </div>
-                          <div>
-                            <h6 className="font-medium text-foreground text-sm">{tool.name}</h6>
-                            <p className="text-xs text-muted-foreground">{tool.purpose}</p>
-                            <p className="text-xs text-[hsl(142,76%,36%)] font-medium mt-1">{tool.pricing}</p>
+                          <div className="flex-grow">
+                            {isEditMode ? (
+                              <div className="space-y-2">
+                                <Input
+                                  className="text-sm font-medium"
+                                  placeholder="Tool name"
+                                  value={editedPlan?.recommendedTools[index]?.name || ''}
+                                  onChange={(e) => {
+                                    if (editedPlan) {
+                                      const newPlan = { ...editedPlan };
+                                      newPlan.recommendedTools[index].name = e.target.value;
+                                      setEditedPlan(newPlan);
+                                    }
+                                  }}
+                                />
+                                <Input
+                                  className="text-xs"
+                                  placeholder="Purpose"
+                                  value={editedPlan?.recommendedTools[index]?.purpose || ''}
+                                  onChange={(e) => {
+                                    if (editedPlan) {
+                                      const newPlan = { ...editedPlan };
+                                      newPlan.recommendedTools[index].purpose = e.target.value;
+                                      setEditedPlan(newPlan);
+                                    }
+                                  }}
+                                />
+                                <Input
+                                  className="text-xs"
+                                  placeholder="Pricing"
+                                  value={editedPlan?.recommendedTools[index]?.pricing || ''}
+                                  onChange={(e) => {
+                                    if (editedPlan) {
+                                      const newPlan = { ...editedPlan };
+                                      newPlan.recommendedTools[index].pricing = e.target.value;
+                                      setEditedPlan(newPlan);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <>
+                                <h6 className="font-medium text-foreground text-sm">{tool.name}</h6>
+                                <p className="text-xs text-muted-foreground">{tool.purpose}</p>
+                                <p className="text-xs text-[hsl(142,76%,36%)] font-medium mt-1">{tool.pricing}</p>
+                              </>
+                            )}
                           </div>
+                          {isEditMode && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => {
+                                if (editedPlan) {
+                                  const newTools = editedPlan.recommendedTools.filter((_, i) => i !== index);
+                                  setEditedPlan({
+                                    ...editedPlan,
+                                    recommendedTools: newTools
+                                  });
+                                }
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -987,18 +1072,103 @@ export default function Home() {
 
                 <Card className="shadow-sm">
                   <CardContent className="p-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <ChartLine className="text-[hsl(142,76%,36%)] w-5 h-5" />
-                      <h4 className="text-lg font-semibold">Key Performance Indicators</h4>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <ChartLine className="text-[hsl(142,76%,36%)] w-5 h-5" />
+                        <h4 className="text-lg font-semibold">Key Performance Indicators</h4>
+                      </div>
+                      {isEditMode && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            if (editedPlan) {
+                              const newKPI = {
+                                metric: "New KPI",
+                                target: "Target value",
+                                tracking: "How to track"
+                              };
+                              setEditedPlan({
+                                ...editedPlan,
+                                kpis: [...editedPlan.kpis, newKPI]
+                              });
+                            }
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add KPI
+                        </Button>
+                      )}
                     </div>
                     <div className="space-y-3">
-                      {generatedPlan.kpis.map((kpi, index) => (
+                      {(isEditMode ? editedPlan?.kpis || [] : generatedPlan.kpis).map((kpi, index) => (
                         <div key={index} className="p-3 bg-muted rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <h6 className="font-medium text-foreground text-sm">{kpi.metric}</h6>
-                            <span className="text-sm font-semibold text-[hsl(142,76%,36%)]">{kpi.target}</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">{kpi.tracking}</p>
+                          {isEditMode ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <Input
+                                  className="text-sm font-medium flex-grow"
+                                  placeholder="KPI metric"
+                                  value={editedPlan?.kpis[index]?.metric || ''}
+                                  onChange={(e) => {
+                                    if (editedPlan) {
+                                      const newPlan = { ...editedPlan };
+                                      newPlan.kpis[index].metric = e.target.value;
+                                      setEditedPlan(newPlan);
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive flex-shrink-0"
+                                  onClick={() => {
+                                    if (editedPlan) {
+                                      const newKPIs = editedPlan.kpis.filter((_, i) => i !== index);
+                                      setEditedPlan({
+                                        ...editedPlan,
+                                        kpis: newKPIs
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              <Input
+                                className="text-xs"
+                                placeholder="Target"
+                                value={editedPlan?.kpis[index]?.target || ''}
+                                onChange={(e) => {
+                                  if (editedPlan) {
+                                    const newPlan = { ...editedPlan };
+                                    newPlan.kpis[index].target = e.target.value;
+                                    setEditedPlan(newPlan);
+                                  }
+                                }}
+                              />
+                              <Input
+                                className="text-xs"
+                                placeholder="How to track"
+                                value={editedPlan?.kpis[index]?.tracking || ''}
+                                onChange={(e) => {
+                                  if (editedPlan) {
+                                    const newPlan = { ...editedPlan };
+                                    newPlan.kpis[index].tracking = e.target.value;
+                                    setEditedPlan(newPlan);
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <h6 className="font-medium text-foreground text-sm">{kpi.metric}</h6>
+                                <span className="text-sm font-semibold text-[hsl(142,76%,36%)]">{kpi.target}</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">{kpi.tracking}</p>
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>
