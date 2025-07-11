@@ -116,8 +116,11 @@ export class MemStorage implements IStorage {
   async createFeedback(insertFeedback: InsertCommunityFeedback): Promise<CommunityFeedback> {
     const id = this.currentFeedbackId++;
     const feedback: CommunityFeedback = {
-      ...insertFeedback,
       id,
+      name: insertFeedback.name,
+      startupName: insertFeedback.startupName ?? null,
+      domain: insertFeedback.domain ?? null,
+      feedback: insertFeedback.feedback,
       upvotes: 0,
       downvotes: 0,
       createdAt: new Date()

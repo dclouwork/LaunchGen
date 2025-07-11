@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { body, param, validationResult } from "express-validator";
 import { storage } from "./storage";
@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body('generatedPlan').isObject().withMessage('Generated plan must be an object'),
     body('generatedPlan.title').optional().isString().trim().isLength({ max: 200 })
       .withMessage('Title must be less than 200 characters')
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     // Check validation results
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -284,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .withMessage('Startup name must be less than 100 characters'),
     body('domain').optional().isString().trim().isLength({ max: 100 })
       .withMessage('Domain must be less than 100 characters')
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     // Check validation results
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -324,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/feedback/:id/vote", [
     param('id').isInt({ min: 1 }).withMessage('Invalid feedback ID'),
     body('voteType').isIn(['upvote', 'downvote']).withMessage('Vote type must be upvote or downvote')
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     // Check validation results
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

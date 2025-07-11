@@ -13,12 +13,16 @@ export default function SharePage() {
   const [expandedWeeks, setExpandedWeeks] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<{
+    success: boolean;
+    plan: LaunchPlanResponse;
+    isEditable: boolean;
+  }>({
     queryKey: [`/api/share/${token}`],
     enabled: !!token,
   });
 
-  const plan = data?.success ? data.plan as LaunchPlanResponse : null;
+  const plan = data?.success ? data.plan : null;
 
   const toggleWeekExpansion = (weekIndex: number) => {
     setExpandedWeeks(prev => ({

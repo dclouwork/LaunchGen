@@ -25,6 +25,14 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req: Request) => {
+    // When using trust proxy, use the real IP address from headers
+    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  },
+  skip: (req: Request) => {
+    // Skip rate limiting for trusted IPs or certain conditions
+    return false;
+  }
 });
 
 // Apply rate limiting to API routes
@@ -35,6 +43,10 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 requests per windowMs for auth endpoints
   skipSuccessfulRequests: true, // Don't count successful requests
+  keyGenerator: (req: Request) => {
+    // When using trust proxy, use the real IP address from headers
+    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  }
 });
 
 app.use(express.json({ limit: '10mb' })); // Limit payload size
