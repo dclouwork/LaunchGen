@@ -82,9 +82,6 @@ Preferred communication style: Simple, everyday language.
 - **esbuild**: Fast bundling for production
 - **tsx**: TypeScript execution for development
 
-### Analytics Dependencies
-- **posthog-js**: Product analytics platform for tracking user interactions (production only)
-
 ## Deployment Strategy
 
 ### Build Process
@@ -218,19 +215,3 @@ Preferred communication style: Simple, everyday language.
      - Updated `client/src/components/SEO.tsx` to handle domain-specific URLs
      - Modified `client/index.html` with new domain in all meta tags
      - Updated `client/public/sitemap.xml` and `client/public/robots.txt`
-
-12. **PostHog Analytics Integration** (January 11, 2025): Implemented production-only analytics tracking:
-   - **Production-Only Initialization**: PostHog only initializes when `import.meta.env.PROD` is true
-   - **Environment Variables**: Added VITE_PUBLIC_POSTHOG_KEY and VITE_PUBLIC_POSTHOG_HOST to .env
-   - **Custom Hook**: Created `usePostHog` hook that returns mock functions in development, real PostHog in production
-   - **Development Logging**: In dev mode, all tracking calls are logged to console with `[PostHog Dev]` prefix
-   - **Key Events Tracked**:
-     - `launch_plan_generation_started`: Tracks when users start generating a plan (text or PDF)
-     - `launch_plan_generation_completed`: Tracks successful plan generation with business details
-     - `launch_plan_edited`: Tracks when users save edits to their plans
-     - `launch_plan_shared`: Tracks when users share their plans
-   - **Implementation Details**:
-     - Modified `client/src/main.tsx` to conditionally wrap app with PostHogProvider
-     - Created `client/src/hooks/use-posthog.ts` with comprehensive mock implementation
-     - Added tracking to key user actions in `client/src/pages/home.tsx`
-     - Added .env to .gitignore for security

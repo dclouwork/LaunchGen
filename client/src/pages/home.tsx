@@ -16,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { usePostHog } from "@/hooks/use-posthog";
 import { apiRequest } from "@/lib/queryClient";
 import { businessInfoSchema, type BusinessInfo, type LaunchPlanResponse } from "@shared/schema";
 import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Share, Clock, Target, Wrench, ChevronDown, ChevronRight, Save, X, Share2, Plus } from "lucide-react";
@@ -41,7 +40,6 @@ export default function Home() {
   const [currentGenerationStep, setCurrentGenerationStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
-  const posthog = usePostHog();
 
   // Define the generation steps
   const generationSteps: Step[] = [
@@ -106,14 +104,6 @@ export default function Home() {
 
   const generatePlanMutation = useMutation({
     mutationFn: async (data: BusinessInfo) => {
-      // Track plan generation started
-      posthog.capture('launch_plan_generation_started', {
-        input_method: 'text',
-        industry: data.industry,
-        time_commitment: data.timeCommitment,
-        budget: data.budget,
-      });
-      
       // Set initial state
       setIsGenerating(true);
       setCurrentGenerationStep(1);
@@ -142,14 +132,6 @@ export default function Home() {
           setEditedPlanTitle(newTitle);
         }
         
-        // Track successful plan generation
-        posthog.capture('launch_plan_generation_completed', {
-          input_method: 'text',
-          plan_id: data.planId,
-          business_name: businessName || 'Unknown',
-          week_count: data.plan.weeks.length,
-        });
-        
         // Delay slightly to show completion before hiding stepper
         setTimeout(() => {
           setIsGenerating(false);
@@ -175,16 +157,6 @@ export default function Home() {
 
   const generatePlanFromPDFMutation = useMutation({
     mutationFn: async ({ file, formData }: { file: File; formData: Omit<BusinessInfo, 'businessIdea'> }) => {
-      // Track PDF upload and generation started
-      posthog.capture('launch_plan_generation_started', {
-        input_method: 'pdf',
-        file_size: file.size,
-        file_name: file.name,
-        industry: formData.industry,
-        time_commitment: formData.timeCommitment,
-        budget: formData.budget,
-      });
-      
       // Set initial state
       setIsGenerating(true);
       setCurrentGenerationStep(1);
@@ -231,14 +203,6 @@ export default function Home() {
           setEditedPlanTitle(newTitle);
         }
         
-        // Track successful PDF plan generation
-        posthog.capture('launch_plan_generation_completed', {
-          input_method: 'pdf',
-          plan_id: data.planId,
-          business_name: businessName || 'Unknown',
-          week_count: data.plan.weeks.length,
-        });
-        
         // Delay slightly to show completion before hiding stepper
         setTimeout(() => {
           setIsGenerating(false);
@@ -278,14 +242,6 @@ export default function Home() {
       if (data.success) {
         setGeneratedPlan(editedPlan);
         setIsEditMode(false);
-        
-        // Track plan edited and saved
-        posthog.capture('launch_plan_edited', {
-          plan_id: planId,
-          title_changed: planTitle !== editedPlanTitle,
-          plan_title: editedPlanTitle,
-        });
-        
         toast({
           title: "Saved!",
           description: "Your changes have been saved successfully.",
@@ -314,13 +270,6 @@ export default function Home() {
         const fullUrl = `${window.location.origin}${data.shareUrl}`;
         setShareUrl(fullUrl);
         setShowShareDialog(true);
-        
-        // Track plan shared
-        posthog.capture('launch_plan_shared', {
-          plan_id: planId,
-          plan_title: planTitle,
-          share_url: data.shareUrl,
-        });
       } else {
         throw new Error("Failed to generate share link");
       }
