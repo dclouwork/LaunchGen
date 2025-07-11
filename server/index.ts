@@ -12,6 +12,28 @@ const app = express();
 // Trust proxy headers for accurate rate limiting (required for Replit)
 app.set('trust proxy', true);
 
+// Domain redirect middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const host = req.get('host');
+  
+  // Redirect www.launchgen.dev to launchgen.dev
+  if (host === 'www.launchgen.dev') {
+    return res.redirect(301, `https://launchgen.dev${req.originalUrl}`);
+  }
+  
+  // Redirect launch-gen.replit.app to launchgen.dev
+  if (host === 'launch-gen.replit.app') {
+    return res.redirect(301, `https://launchgen.dev${req.originalUrl}`);
+  }
+  
+  // Force HTTPS in production
+  if (process.env.NODE_ENV === 'production' && req.header('x-forwarded-proto') !== 'https') {
+    return res.redirect(301, `https://${host}${req.originalUrl}`);
+  }
+  
+  next();
+});
+
 // Security middleware - Helmet sets various HTTP headers
 app.use(helmet({
   contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,

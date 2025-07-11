@@ -194,3 +194,24 @@ Preferred communication style: Simple, everyday language.
    - **Progress Percentage**: Shows completion percentage (0-100%) below stepper
    - **Mobile Optimizations**: Smaller circles, vertical layout, hidden connector lines on mobile
    - **Implementation**: Added state management for currentGenerationStep and isGenerating in home.tsx
+
+11. **Primary Domain Configuration** (January 11, 2025): Established launchgen.dev as the primary domain with comprehensive redirect setup:
+   - **Domain Redirects**: Configured automatic redirects:
+     - www.launchgen.dev → launchgen.dev (301 permanent redirect)
+     - launch-gen.replit.app → launchgen.dev (301 permanent redirect)
+     - Force HTTPS on all requests in production
+   - **Server-Side Redirects**: Implemented Express middleware to handle domain redirects at the server level
+   - **Client-Side Redirects**: Added .htaccess rules for Apache-based hosting environments
+   - **SEO Updates**: Updated all SEO-related configurations to use the new primary domain:
+     - Meta tags: Updated og:url, twitter:url to use full launchgen.dev URLs
+     - Canonical URLs: Changed from relative to absolute URLs with launchgen.dev
+     - Structured Data: Updated schema.org WebApplication URL to launchgen.dev
+     - Sitemap: Changed all URLs from relative paths to full launchgen.dev URLs
+     - Robots.txt: Updated sitemap location to full URL
+     - SEO Component: Modified to use launchgen.dev for production, localhost for development
+   - **Implementation Details**:
+     - Modified `server/index.ts` to add domain redirect middleware
+     - Updated `client/public/.htaccess` with RewriteRules
+     - Updated `client/src/components/SEO.tsx` to handle domain-specific URLs
+     - Modified `client/index.html` with new domain in all meta tags
+     - Updated `client/public/sitemap.xml` and `client/public/robots.txt`

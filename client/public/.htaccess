@@ -1,3 +1,20 @@
+# Domain redirects to primary domain
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+  
+  # Redirect www.launchgen.dev to launchgen.dev
+  RewriteCond %{HTTP_HOST} ^www\.launchgen\.dev$ [NC]
+  RewriteRule ^(.*)$ https://launchgen.dev/$1 [R=301,L]
+  
+  # Redirect launch-gen.replit.app to launchgen.dev
+  RewriteCond %{HTTP_HOST} ^launch-gen\.replit\.app$ [NC]
+  RewriteRule ^(.*)$ https://launchgen.dev/$1 [R=301,L]
+</IfModule>
+
 # Enable compression
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/plain

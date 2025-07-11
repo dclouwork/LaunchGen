@@ -13,8 +13,8 @@ export default function SEO({
   title = "Launch Plan Generator - Create Your 30-Day Business Launch Strategy",
   description = "Generate a detailed 30-day launch plan for your business idea. Get week-by-week tasks, daily actions, tools, and KPIs. Perfect for solo founders starting with zero budget.",
   keywords = "business launch plan, startup strategy, 30-day plan, business planning tool, entrepreneur, launch strategy, startup roadmap",
-  ogImage = "/og-image.svg",
-  ogUrl = window.location.origin,
+  ogImage = window.location.href.includes('localhost') ? "/og-image.svg" : "https://launchgen.dev/og-image.svg",
+  ogUrl = window.location.href.includes('localhost') ? window.location.origin : `https://launchgen.dev${window.location.pathname}`,
   noIndex = false
 }: SEOProps) {
   useEffect(() => {
