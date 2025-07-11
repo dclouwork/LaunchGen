@@ -178,3 +178,19 @@ Preferred communication style: Simple, everyday language.
      - Automatically extracts plan title from overview
      - Includes all plan details, social media drafts, tools, and KPIs
    - **Implementation**: Extended edit mode functionality in home.tsx and added jsPDF integration to share.tsx
+
+10. **AI Pipeline Progress Stepper** (January 11, 2025): Added visual progress tracking for launch plan generation:
+   - **Stepper Component**: Created a reusable stepper component (`client/src/components/ui/stepper.tsx`) with:
+     - Four phases: Core Plan Generation, Proofread & Draft Posts, QA & Completion, Delivered
+     - Visual states: completed (filled circles with checkmarks), active (outlined circle), pending (gray)
+     - Smooth 300ms animations for state transitions and progress line fill
+     - Mobile responsive: horizontal on desktop, vertical on mobile (<640px)
+   - **Progress Integration**: Added step tracking to generation mutations with simulated timing:
+     - Stage 1 (0-8s): Core Plan Generation
+     - Stage 2 (8-20s): Proofreading & Creating Post Drafts
+     - Stage 3 (20s-completion): QA & Final Validation
+     - Stage 4: Delivered (shown for 1s after completion)
+   - **UI Placement**: Fixed above plan details during generation and briefly after completion
+   - **Progress Percentage**: Shows completion percentage (0-100%) below stepper
+   - **Mobile Optimizations**: Smaller circles, vertical layout, hidden connector lines on mobile
+   - **Implementation**: Added state management for currentGenerationStep and isGenerating in home.tsx

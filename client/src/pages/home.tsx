@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -22,6 +22,7 @@ import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Share, Clock, T
 import jsPDF from "jspdf";
 import CommunityFeedback from "@/components/CommunityFeedback";
 import SEO from "@/components/SEO";
+import { Stepper, StepperProgress, type Step } from "@/components/ui/stepper";
 
 export default function Home() {
   const [inputMethod, setInputMethod] = useState<'text' | 'pdf'>('text');
@@ -36,7 +37,17 @@ export default function Home() {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [planTitle, setPlanTitle] = useState("Your 30-Day Launch Plan");
   const [editedPlanTitle, setEditedPlanTitle] = useState("Your 30-Day Launch Plan");
+  const [currentGenerationStep, setCurrentGenerationStep] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+
+  // Define the generation steps
+  const generationSteps: Step[] = [
+    { id: 1, label: "Core Plan Generation", description: "Creating your 30-day framework" },
+    { id: 2, label: "Proofread & Draft Posts", description: "Polishing content and drafting social posts" },
+    { id: 3, label: "QA & Completion", description: "Final quality checks and validation" },
+    { id: 4, label: "Delivered", description: "Your plan is ready!" }
+  ];
 
   // Function to extract business name from executive summary
   const extractBusinessName = (overview: string): string | null => {
@@ -93,11 +104,22 @@ export default function Home() {
 
   const generatePlanMutation = useMutation({
     mutationFn: async (data: BusinessInfo) => {
+      // Set initial state
+      setIsGenerating(true);
+      setCurrentGenerationStep(1);
+      
+      // Simulate progression through the stages
+      setTimeout(() => setCurrentGenerationStep(2), 8000); // Move to stage 2 after 8 seconds
+      setTimeout(() => setCurrentGenerationStep(3), 20000); // Move to stage 3 after 20 seconds
+      
       const response = await apiRequest("POST", "/api/generate-plan", data);
       return response.json();
     },
     onSuccess: (data) => {
       if (data.success) {
+        // Move to final step
+        setCurrentGenerationStep(4);
+        
         setGeneratedPlan(data.plan);
         setPlanId(data.planId);
         setEditedPlan(data.plan);
@@ -110,15 +132,21 @@ export default function Home() {
           setEditedPlanTitle(newTitle);
         }
         
-        toast({
-          title: "Success!",
-          description: "Your 30-day launch plan has been generated.",
-        });
+        // Delay slightly to show completion before hiding stepper
+        setTimeout(() => {
+          setIsGenerating(false);
+          toast({
+            title: "Success!",
+            description: "Your 30-day launch plan has been generated.",
+          });
+        }, 1000);
       } else {
         throw new Error(data.error);
       }
     },
     onError: (error) => {
+      setIsGenerating(false);
+      setCurrentGenerationStep(0);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to generate launch plan",
@@ -129,6 +157,14 @@ export default function Home() {
 
   const generatePlanFromPDFMutation = useMutation({
     mutationFn: async ({ file, formData }: { file: File; formData: Omit<BusinessInfo, 'businessIdea'> }) => {
+      // Set initial state
+      setIsGenerating(true);
+      setCurrentGenerationStep(1);
+      
+      // Simulate progression through the stages
+      setTimeout(() => setCurrentGenerationStep(2), 8000); // Move to stage 2 after 8 seconds
+      setTimeout(() => setCurrentGenerationStep(3), 20000); // Move to stage 3 after 20 seconds
+      
       const data = new FormData();
       data.append('pdf', file);
       data.append('industry', formData.industry);
@@ -152,6 +188,9 @@ export default function Home() {
     },
     onSuccess: (data) => {
       if (data.success) {
+        // Move to final step
+        setCurrentGenerationStep(4);
+        
         setGeneratedPlan(data.plan);
         setPlanId(data.planId);
         setEditedPlan(data.plan);
@@ -164,10 +203,15 @@ export default function Home() {
           setEditedPlanTitle(newTitle);
         }
         
-        toast({
-          title: "Success!",
-          description: "Your business plan PDF has been processed and launch plan generated.",
-        });
+        // Delay slightly to show completion before hiding stepper
+        setTimeout(() => {
+          setIsGenerating(false);
+          toast({
+            title: "Success!",
+            description: "Your business plan PDF has been processed and launch plan generated.",
+          });
+        }, 1000);
+        
         // Reset the form and file
         pdfForm.reset();
         setPdfFile(null);
@@ -176,6 +220,8 @@ export default function Home() {
       }
     },
     onError: (error) => {
+      setIsGenerating(false);
+      setCurrentGenerationStep(0);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to process PDF",
@@ -796,29 +842,102 @@ export default function Home() {
 
           {/* Loading State */}
           {isLoading && (
-            <Card className="shadow-sm">
-              <CardContent className="p-8">
-                <div className="text-center space-y-6">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                    <Brain className="text-primary w-8 h-8" />
+            <div className="space-y-6">
+              {/* Progress Stepper */}
+              <Card className="shadow-sm">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="hidden sm:block">
+                      <Stepper 
+                        steps={generationSteps} 
+                        currentStep={currentGenerationStep}
+                        orientation="horizontal"
+                        className="mb-4"
+                      />
+                    </div>
+                    <div className="block sm:hidden">
+                      <Stepper 
+                        steps={generationSteps} 
+                        currentStep={currentGenerationStep}
+                        orientation="vertical"
+                        className="mb-4"
+                      />
+                    </div>
+                    <StepperProgress 
+                      currentStep={currentGenerationStep} 
+                      totalSteps={generationSteps.length}
+                      className="text-center"
+                    />
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-foreground">Generating Your Launch Plan</h3>
-                    <p className="text-muted-foreground mt-2">Our AI is analyzing your business information and creating a detailed 30-day strategy...</p>
+                </CardContent>
+              </Card>
+              
+              {/* Loading Message */}
+              <Card className="shadow-sm">
+                <CardContent className="p-8">
+                  <div className="text-center space-y-6">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                      <Brain className="text-primary w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-foreground">
+                        {currentGenerationStep === 1 && "Generating Core Plan..."}
+                        {currentGenerationStep === 2 && "Proofreading & Creating Post Drafts..."}
+                        {currentGenerationStep === 3 && "Finalizing Your Launch Strategy..."}
+                        {currentGenerationStep === 0 && "Generating Your Launch Plan"}
+                      </h3>
+                      <p className="text-muted-foreground mt-2">
+                        {currentGenerationStep === 1 && "Creating your 30-day framework with daily tasks and milestones"}
+                        {currentGenerationStep === 2 && "Polishing content and drafting engaging social media posts"}
+                        {currentGenerationStep === 3 && "Running quality checks and ensuring everything is perfect"}
+                        {currentGenerationStep === 0 && "Our AI is analyzing your business information and creating a detailed 30-day strategy..."}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce-dot"></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce-dot"></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce-dot"></div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce-dot"></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce-dot"></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce-dot"></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Results Section */}
           {generatedPlan && (
             <div className="space-y-6">
+              {/* Progress Stepper - Show only when generating or recently completed */}
+              {(isGenerating || currentGenerationStep === 4) && (
+                <Card className="shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="hidden sm:block">
+                        <Stepper 
+                          steps={generationSteps} 
+                          currentStep={currentGenerationStep}
+                          orientation="horizontal"
+                          className="mb-4"
+                        />
+                      </div>
+                      <div className="block sm:hidden">
+                        <Stepper 
+                          steps={generationSteps} 
+                          currentStep={currentGenerationStep}
+                          orientation="vertical"
+                          className="mb-4"
+                        />
+                      </div>
+                      <StepperProgress 
+                        currentStep={currentGenerationStep} 
+                        totalSteps={generationSteps.length}
+                        className="text-center"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
               {/* Plan Overview */}
               <Card className="shadow-sm">
                 <CardContent className="p-6">
