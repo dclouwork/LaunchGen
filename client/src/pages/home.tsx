@@ -18,7 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { businessInfoSchema, type BusinessInfo, type LaunchPlanResponse } from "@shared/schema";
-import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Calendar, Share, Clock, Target, Wrench, ChevronDown, ChevronRight, Save, X, Share2, Plus } from "lucide-react";
+import { Rocket, Edit, Upload, Brain, ChartLine, Copy, Download, Share, Clock, Target, Wrench, ChevronDown, ChevronRight, Save, X, Share2, Plus } from "lucide-react";
 import jsPDF from "jspdf";
 import CommunityFeedback from "@/components/CommunityFeedback";
 
@@ -1408,18 +1408,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-card border-t border-border mt-16">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center space-x-2 text-muted-foreground">
-              <Brain className="w-4 h-4" />
-              <span className="text-sm">Powered by OpenAI GPT-4</span>
-            </div>
-            <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              LaunchPlan Generator creates personalized business launch strategies based on proven Reddit-first marketing principles. 
-              Your data is processed securely and not stored after plan generation.
-            </p>
-          </div>
-        </div>
+        
       </footer>
     </div>
   );
