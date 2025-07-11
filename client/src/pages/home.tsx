@@ -106,16 +106,71 @@ export default function Home() {
 
   const generatePlanMutation = useMutation({
     mutationFn: async (data: BusinessInfo) => {
-      // Set initial state
-      setIsGenerating(true);
-      setCurrentGenerationStep(1);
-      
-      // Simulate progression through the stages
-      setTimeout(() => setCurrentGenerationStep(2), 8000); // Move to stage 2 after 8 seconds
-      setTimeout(() => setCurrentGenerationStep(3), 20000); // Move to stage 3 after 20 seconds
-      
-      const response = await apiRequest("POST", "/api/generate-plan", data);
-      return response.json();
+      return new Promise((resolve, reject) => {
+        // Set initial state
+        setIsGenerating(true);
+        setCurrentGenerationStep(1);
+        
+        // Use fetch with stream response instead of EventSource
+        fetch('/api/generate-plan-sse', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+          credentials: 'include',
+        }).then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+          
+          if (!reader) {
+            throw new Error('No response body reader available');
+          }
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              break;
+            }
+            
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const parsed = JSON.parse(line.substring(6));
+                  
+                  if (parsed.type === 'progress') {
+                    setCurrentGenerationStep(parsed.stage);
+                  } else if (parsed.type === 'success') {
+                    setCurrentGenerationStep(4);
+                    resolve({
+                      success: true,
+                      plan: parsed.plan,
+                      planId: parsed.planId
+                    });
+                    return;
+                  } else if (parsed.type === 'error') {
+                    reject(new Error(parsed.error));
+                    return;
+                  }
+                } catch (parseError) {
+                  console.error('Failed to parse SSE message:', parseError);
+                }
+              }
+            }
+          }
+        }).catch(error => {
+          console.error('SSE fetch error:', error);
+          reject(error);
+        });
+      });
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -169,34 +224,77 @@ export default function Home() {
 
   const generatePlanFromPDFMutation = useMutation({
     mutationFn: async ({ file, formData }: { file: File; formData: Omit<BusinessInfo, 'businessIdea'> }) => {
-      // Set initial state
-      setIsGenerating(true);
-      setCurrentGenerationStep(1);
-      
-      // Simulate progression through the stages
-      setTimeout(() => setCurrentGenerationStep(2), 8000); // Move to stage 2 after 8 seconds
-      setTimeout(() => setCurrentGenerationStep(3), 20000); // Move to stage 3 after 20 seconds
-      
-      const data = new FormData();
-      data.append('pdf', file);
-      data.append('industry', formData.industry);
-      data.append('targetMarket', formData.targetMarket);
-      data.append('timeCommitment', formData.timeCommitment);
-      data.append('budget', formData.budget);
-      data.append('additionalDetails', formData.additionalDetails || '');
-      
-      const response = await fetch('/api/generate-plan-pdf', {
-        method: 'POST',
-        body: data,
-        credentials: 'include',
+      return new Promise((resolve, reject) => {
+        // Set initial state
+        setIsGenerating(true);
+        setCurrentGenerationStep(1);
+        
+        const data = new FormData();
+        data.append('pdf', file);
+        data.append('industry', formData.industry);
+        data.append('targetMarket', formData.targetMarket);
+        data.append('timeCommitment', formData.timeCommitment);
+        data.append('budget', formData.budget);
+        data.append('additionalDetails', formData.additionalDetails || '');
+        
+        // Use fetch with stream response for PDF SSE
+        fetch('/api/generate-plan-pdf-sse', {
+          method: 'POST',
+          body: data,
+          credentials: 'include',
+        }).then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+          
+          if (!reader) {
+            throw new Error('No response body reader available');
+          }
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              break;
+            }
+            
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const parsed = JSON.parse(line.substring(6));
+                  
+                  if (parsed.type === 'progress') {
+                    setCurrentGenerationStep(parsed.stage);
+                  } else if (parsed.type === 'success') {
+                    setCurrentGenerationStep(4);
+                    resolve({
+                      success: true,
+                      plan: parsed.plan,
+                      planId: parsed.planId,
+                      extractedText: parsed.extractedText
+                    });
+                    return;
+                  } else if (parsed.type === 'error') {
+                    reject(new Error(parsed.error));
+                    return;
+                  }
+                } catch (parseError) {
+                  console.error('Failed to parse SSE message:', parseError);
+                }
+              }
+            }
+          }
+        }).catch(error => {
+          console.error('SSE fetch error:', error);
+          reject(error);
+        });
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to process PDF');
-      }
-      
-      return response.json();
     },
     onSuccess: (data) => {
       if (data.success) {

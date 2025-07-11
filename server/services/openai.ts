@@ -7,8 +7,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key" 
 });
 
+// Progress callback type
+type ProgressCallback = (stage: number, message: string) => void;
+
 // Stage 1: Generate initial launch plan with GPT-4o
-async function generateInitialPlan(businessInfo: BusinessInfo): Promise<any> {
+async function generateInitialPlan(businessInfo: BusinessInfo, onProgress?: ProgressCallback): Promise<any> {
   const safeOriginalInput = businessInfo.businessIdea.replace(/"/g, '\\"');
   const safeTitle = businessInfo.industry.replace(/"/g, '\\"');
 
@@ -76,6 +79,10 @@ Respond ONLY with valid JSON. Use this schema as a **guide**;
 `;
 
   try {
+    if (onProgress) {
+      onProgress(1, "Generating initial launch plan with GPT-4o...");
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -98,6 +105,10 @@ Respond ONLY with valid JSON. Use this schema as a **guide**;
       throw new Error("No content received from GPT-4o");
     }
 
+    if (onProgress) {
+      onProgress(1, "Initial plan generated successfully");
+    }
+
     return JSON.parse(content);
   } catch (error) {
     console.error("GPT-4o Stage 1 Error:", error);
@@ -106,7 +117,7 @@ Respond ONLY with valid JSON. Use this schema as a **guide**;
 }
 
 // Stage 2: Proofread and generate social media post drafts with GPT-4.5
-async function proofreadAndGeneratePosts(rawPlan: any, businessInfo: BusinessInfo): Promise<{ proofreadPlan: any; postDrafts: any[] }> {
+async function proofreadAndGeneratePosts(rawPlan: any, businessInfo: BusinessInfo, onProgress?: ProgressCallback): Promise<{ proofreadPlan: any; postDrafts: any[] }> {
   const prompt = `
 You are a professional editor and social media content creator specializing in authentic, human-centered content that drives engagement. You have two tasks:
 
@@ -188,6 +199,10 @@ Return JSON in this format:
 }`;
 
   try {
+    if (onProgress) {
+      onProgress(2, "Proofreading and generating social media posts...");
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4-turbo-preview", // Using GPT-4 Turbo as GPT-4.5 proxy
       messages: [
@@ -210,6 +225,10 @@ Return JSON in this format:
       throw new Error("No content received from GPT-4.5");
     }
 
+    if (onProgress) {
+      onProgress(2, "Proofreading and post generation completed");
+    }
+
     return JSON.parse(content);
   } catch (error) {
     console.error("GPT-4.5 Stage 2 Error:", error);
@@ -218,7 +237,7 @@ Return JSON in this format:
 }
 
 // Stage 3: Final QA and completion with O3
-async function finalizeWithO3(proofreadPlan: any, postDrafts: any[]): Promise<LaunchPlanResponse> {
+async function finalizeWithO3(proofreadPlan: any, postDrafts: any[], onProgress?: ProgressCallback): Promise<LaunchPlanResponse> {
   const frameworkChecklist = [
     "overview ends with a clear Day-30 outcome",
     "every dailyTask has task, tools[], time, kpi",
@@ -264,6 +283,10 @@ Expected schema for dailyTasks:
 }`;
 
   try {
+    if (onProgress) {
+      onProgress(3, "Finalizing with O3 quality assurance...");
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // Using GPT-4o as O3 proxy (most capable model)
       messages: [
@@ -309,6 +332,10 @@ Expected schema for dailyTasks:
       nextActions: finalPlan.nextActions
     };
 
+    if (onProgress) {
+      onProgress(3, "Quality assurance completed successfully");
+    }
+
     return transformedPlan as LaunchPlanResponse;
   } catch (error) {
     console.error("O3 Stage 3 Error:", error);
@@ -317,18 +344,21 @@ Expected schema for dailyTasks:
 }
 
 // Main orchestrator function
-export async function generateLaunchPlan(businessInfo: BusinessInfo): Promise<LaunchPlanResponse> {
+export async function generateLaunchPlan(businessInfo: BusinessInfo, onProgress?: ProgressCallback): Promise<LaunchPlanResponse> {
   try {
     console.log("Stage 1: Generating initial plan with GPT-4o...");
-    const rawPlan = await generateInitialPlan(businessInfo);
+    const rawPlan = await generateInitialPlan(businessInfo, onProgress);
     
     console.log("Stage 2: Proofreading and generating social posts with GPT-4.5...");
-    const { proofreadPlan, postDrafts } = await proofreadAndGeneratePosts(rawPlan, businessInfo);
+    const { proofreadPlan, postDrafts } = await proofreadAndGeneratePosts(rawPlan, businessInfo, onProgress);
     
     console.log("Stage 3: Finalizing with O3 quality assurance...");
-    const finalPlan = await finalizeWithO3(proofreadPlan, postDrafts);
+    const finalPlan = await finalizeWithO3(proofreadPlan, postDrafts, onProgress);
     
     console.log("Launch plan generation complete!");
+    if (onProgress) {
+      onProgress(4, "Launch plan generation complete!");
+    }
     return finalPlan;
   } catch (error) {
     console.error("Launch plan generation error:", error);

@@ -24,6 +24,162 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Generate launch plan with SSE (Server-Sent Events)
+  app.post("/api/generate-plan-sse", async (req, res) => {
+    try {
+      const validatedData = businessInfoSchema.parse(req.body);
+      
+      // Set up SSE headers
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      });
+
+      // Keep-alive function
+      const keepAlive = setInterval(() => {
+        res.write(':keepalive\n\n');
+      }, 30000);
+
+      // Progress callback function
+      const onProgress = (stage: number, message: string) => {
+        res.write(`data: ${JSON.stringify({ stage, message, type: 'progress' })}\n\n`);
+      };
+
+      try {
+        // Generate the plan with progress updates
+        const generatedPlan = await generateLaunchPlan(validatedData, onProgress);
+        
+        // Store the plan in memory
+        const savedPlan = await storage.createLaunchPlan({
+          businessInfo: JSON.stringify(validatedData),
+          generatedPlan: generatedPlan,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+
+        // Send final success message
+        res.write(`data: ${JSON.stringify({ 
+          type: 'success', 
+          plan: generatedPlan, 
+          planId: savedPlan.id 
+        })}\n\n`);
+        
+      } catch (error) {
+        console.error("Generate plan error:", error);
+        res.write(`data: ${JSON.stringify({ 
+          type: 'error', 
+          error: error instanceof Error ? error.message : "Failed to generate launch plan" 
+        })}\n\n`);
+      } finally {
+        clearInterval(keepAlive);
+        res.end();
+      }
+    } catch (error) {
+      console.error("Generate plan setup error:", error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to setup plan generation"
+      });
+    }
+  });
+
+  // Generate launch plan from PDF upload with SSE
+  app.post("/api/generate-plan-pdf-sse", upload.single('pdf'), async (req: MulterRequest, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: "No PDF file uploaded"
+        });
+      }
+
+      // Set up SSE headers
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      });
+
+      // Keep-alive function
+      const keepAlive = setInterval(() => {
+        res.write(':keepalive\n\n');
+      }, 30000);
+
+      // Progress callback function
+      const onProgress = (stage: number, message: string) => {
+        res.write(`data: ${JSON.stringify({ stage, message, type: 'progress' })}\n\n`);
+      };
+
+      try {
+        // Send initial PDF processing message
+        res.write(`data: ${JSON.stringify({ 
+          stage: 0, 
+          message: "Processing PDF file...", 
+          type: 'progress' 
+        })}\n\n`);
+
+        // Convert PDF to base64
+        const base64Data = req.file.buffer.toString('base64');
+        
+        // Extract text from PDF using OpenAI
+        const extractedText = await extractTextFromPDF(base64Data);
+        
+        // Get form data from request body
+        const { industry, targetMarket, timeCommitment, budget, additionalDetails } = req.body;
+        
+        // Create business info structure combining PDF content and form data
+        const businessInfo = {
+          businessIdea: extractedText,
+          industry: industry || "Not specified",
+          targetMarket: targetMarket || "Not specified", 
+          timeCommitment: timeCommitment || "10 hours/week",
+          budget: budget || "$0 (Zero-budget)",
+          additionalDetails: additionalDetails || "Extracted from uploaded PDF document"
+        };
+
+        // Generate the plan with progress updates
+        const generatedPlan = await generateLaunchPlan(businessInfo, onProgress);
+        
+        // Store the plan in memory
+        const savedPlan = await storage.createLaunchPlan({
+          businessInfo: JSON.stringify(businessInfo),
+          generatedPlan: generatedPlan,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+
+        // Send final success message
+        res.write(`data: ${JSON.stringify({ 
+          type: 'success', 
+          plan: generatedPlan, 
+          planId: savedPlan.id,
+          extractedText: extractedText
+        })}\n\n`);
+        
+      } catch (error) {
+        console.error("Generate plan from PDF error:", error);
+        res.write(`data: ${JSON.stringify({ 
+          type: 'error', 
+          error: error instanceof Error ? error.message : "Failed to process PDF and generate launch plan" 
+        })}\n\n`);
+      } finally {
+        clearInterval(keepAlive);
+        res.end();
+      }
+    } catch (error) {
+      console.error("Generate plan from PDF setup error:", error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to setup PDF plan generation"
+      });
+    }
+  });
+
   // Generate launch plan from text input
   app.post("/api/generate-plan", async (req, res) => {
     try {
