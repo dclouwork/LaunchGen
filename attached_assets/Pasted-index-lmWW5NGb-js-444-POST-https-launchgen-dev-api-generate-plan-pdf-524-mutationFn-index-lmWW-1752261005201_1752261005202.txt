@@ -1,0 +1,91 @@
+index-lmWW5NGb.js:444   POST https://launchgen.dev/api/generate-plan-pdf 524
+mutationFn @ index-lmWW5NGb.js:444
+fn @ index-lmWW5NGb.js:51
+S @ index-lmWW5NGb.js:51
+start @ index-lmWW5NGb.js:51
+execute @ index-lmWW5NGb.js:51
+await in execute
+mutate @ index-lmWW5NGb.js:51
+(anonymous) @ index-lmWW5NGb.js:51
+U @ index-lmWW5NGb.js:444
+(anonymous) @ index-lmWW5NGb.js:206
+await in (anonymous)
+kR @ index-lmWW5NGb.js:37
+AR @ index-lmWW5NGb.js:37
+CR @ index-lmWW5NGb.js:37
+xx @ index-lmWW5NGb.js:37
+GA @ index-lmWW5NGb.js:37
+(anonymous) @ index-lmWW5NGb.js:37
+cb @ index-lmWW5NGb.js:40
+vA @ index-lmWW5NGb.js:37
+J0 @ index-lmWW5NGb.js:37
+Mw @ index-lmWW5NGb.js:37
+VR @ index-lmWW5NGb.js:37
+
+
+production eror preventing plan generation
+
+4:57:52.95
+89bd6688
+User
+6:57:52 PM [express] GET /api/feedback 304 in 2445ms :: {"success":true,"feedback":[{"id":2,"name":"…
+2025-07-11 14:58:38.16
+89bd6688
+User
+Stage 1: Generating initial plan with GPT-4o...
+2025-07-11 14:59:08.62
+89bd6688
+User
+Stage 2: Proofreading and generating social posts with GPT-4.5...
+2025-07-11 14:59:58.33
+89bd6688
+User
+6:59:58 PM [express] GET /api/feedback 200 in 425ms :: {"success":true,"feedback":[{"id":2,"name":"D…
+2025-07-11 15:00:52.71
+89bd6688
+User
+Stage 3: Finalizing with O3 quality assurance...
+2025-07-11 15:02:22.66
+c2419aa1
+System
+system: received signal terminated
+2025-07-11 15:02:43.42
+89bd6688
+User
+Launch plan generation complete!
+2025-07-11 15:02:43.93
+89bd6688
+User
+7:02:43 PM [express] POST /api/generate-plan-pdf 200 in 255714ms :: {"success":true,"plan":{"overvie…
+2025-07-11 15:06:38.58
+2b232275
+System
+starting up user application
+2025-07-11 15:06:38.86
+2b232275
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-07-11 15:06:40.58
+2b232275
+User
+> rest-express@1.0.0 start
+2025-07-11 15:06:40.58
+2b232275
+User
+> NODE_ENV=production node dist/index.js
+2025-07-11 15:06:42.17
+2b232275
+User
+7:06:42 PM [express] serving on port 5000
+2025-07-11 15:06:55.69
+2b232275
+User
+7:06:55 PM [express] GET /api/feedback 304 in 139ms :: {"success":true,"feedback":[{"id":2,"name":"D…
+2025-07-11 15:07:18.54
+2b232275
+User
+Stage 1: Generating initial plan with GPT-4o...
+2025-07-11 15:07:46.51
+2b232275
+User
+Stage 2: Proofreading and generating social posts with GPT-4.5...
