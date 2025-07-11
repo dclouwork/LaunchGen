@@ -145,10 +145,23 @@ Preferred communication style: Simple, everyday language.
    - **Canonical URLs**: Proper canonical links to avoid duplicate content issues
    - **No-index Support**: 404 and error pages marked with noindex directive
 
-7. **Multi-Stage AI Pipeline Implementation** (Latest): Enhanced launch plan generation with three-stage AI processing:
+7. **Multi-Stage AI Pipeline Implementation**: Enhanced launch plan generation with three-stage AI processing:
    - **Stage 1 (GPT-4o)**: Generates initial launch plan following the 30-day framework
    - **Stage 2 (GPT-4 Turbo)**: Proofreads the plan and generates social media post drafts for all tasks mentioning Reddit posts, Twitter threads, or social content
    - **Stage 3 (GPT-4o as O3)**: Final quality assurance, schema validation, and embedding of post drafts into daily tasks
    - **Schema Updates**: Extended launchPlanResponse schema to support postDraft objects with title, body, and thread fields
    - **UI Enhancements**: Added social media post draft display in both home and share pages with blue-themed cards showing formatted post content
    - **Framework Compliance**: Ensures all plans follow the 30-day solopreneur launch framework with Speed & Simplicity, Reddit-First Marketing, Zero-Budget Growth, and Solo Operation Efficiency principles
+
+8. **Enhanced Content Framework** (January 11, 2025): Updated blog and social post drafting to follow engaging human content framework:
+   - **Four-Part Structure**: 
+     1. Relatable Struggle (Hook) - Start with problem/frustration, not product
+     2. Quiet Build-up (Context) - Share why/how with specific details
+     3. Turning Point (Emotional Tension) - Include shift moment where things got real
+     4. Breakthrough (The Reveal) - Introduce solution as survival tactic with alternatives
+   - **Key Principles**: 
+     - Mention 2-3 alternatives and complementary tools in each post
+     - CTA woven naturally into body content, not at the end
+     - Focus on providing value first, product second
+     - Write conversationally with specific numbers and emotions
+   - **Implementation**: Modified Stage 2 of AI pipeline to generate authentic, human-centered content that builds trust and engagement

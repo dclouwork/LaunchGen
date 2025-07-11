@@ -108,17 +108,50 @@ Respond ONLY with valid JSON. Use this schema as a **guide**;
 // Stage 2: Proofread and generate social media post drafts with GPT-4.5
 async function proofreadAndGeneratePosts(rawPlan: any, businessInfo: BusinessInfo): Promise<{ proofreadPlan: any; postDrafts: any[] }> {
   const prompt = `
-You are a professional editor and social media content creator. You have two tasks:
+You are a professional editor and social media content creator specializing in authentic, human-centered content that drives engagement. You have two tasks:
 
 1. Proofread and tighten all text in the launch plan below
-2. For each daily task that mentions creating a Reddit post, Twitter post, or any social media content, generate a draft
+2. For each daily task that mentions creating a Reddit post, Twitter post, or any social media content, generate a draft following the ENGAGING HUMAN CONTENT FRAMEWORK
 
-Rules:
+ENGAGING HUMAN CONTENT FRAMEWORK:
+
+1. **Relatable Struggle (Hook)**
+   - Open with a moment of truth, frustration, or vulnerability — NOT the product
+   - Start with the problem, the human emotion, the "why does this matter"
+   - Example: "I spent 3 hours every Monday manually copying data between spreadsheets, questioning my life choices..."
+
+2. **Quiet Build-up (Context)**
+   - Add context that lets people identify with your situation
+   - Don't dump details, share the why and how you got there
+   - Include specific details that make it real
+   - Example: "As a solo founder juggling 12 clients, I tried everything: complicated automation tools, hiring a VA (too expensive), even waking up at 5am to 'get ahead' of it..."
+
+3. **A Turning Point (Emotional Tension)**
+   - Include a shift, some internal or external moment where things got real
+   - Self-doubt, stress, risk, urgency — make it human
+   - Example: "Last month I almost lost my biggest client because I sent them the wrong data. That's when I realized I couldn't keep doing this..."
+
+4. **Your Breakthrough (The Reveal)**
+   - Introduce your solution like a survival tactic or tool you wish someone handed you sooner
+   - Make the value personal BEFORE you mention the product
+   - Weave in the value proposition naturally, not as a sales pitch
+   - Include alternatives and complementary tools to provide genuine value
+   - The CTA should be woven into the story, not tacked on at the end
+   - Example: "I started using a simple combination of Zapier (for the automation) + my own spreadsheet template + a 15-minute weekly review. But I realized others might want something even simpler, so I built [tool]..."
+
+KEY WRITING RULES:
+- Write like you're telling a friend about your experience over coffee
+- Use specific numbers, times, emotions — make it tangible
+- Mention 2-3 alternatives or complementary tools in each post
+- The CTA should feel like helpful advice, not a sales pitch
+- Focus on providing value first, product second
+- No corporate speak, no "game-changer" or "revolutionary"
+
+Rules for the plan:
 - Do not change pricing or target fields — leave them as-is or "TBD"
 - Keep the same JSON structure
-- For Reddit posts, create engaging titles and detailed bodies following Reddit best practices
-- For Twitter posts, create thread-style content with multiple tweets
-- Return both the proofread plan and a separate array of post drafts
+- For Reddit posts: Create titles that promise value, bodies that tell the full story
+- For Twitter posts: Create thread-style content where each tweet builds on the story
 
 Input Business Info:
 ${JSON.stringify(businessInfo, null, 2)}
@@ -134,15 +167,21 @@ Return JSON in this format:
       "day": 9,
       "channel": "Reddit",
       "draft": {
-        "title": "I built a free [tool] to solve [specific problem]",
-        "body": "Personal story + what it does + link + request feedback..."
+        "title": "How I went from [specific struggle] to [specific outcome] in [timeframe]",
+        "body": "Full story following the 4-part framework with natural paragraphs, specific details, and value-focused content"
       }
     },
     {
       "day": 27,
       "channel": "Twitter",
       "draft": {
-        "thread": ["Tweet 1...", "Tweet 2...", "Tweet 3..."]
+        "thread": [
+          "Tweet 1: Hook with specific struggle",
+          "Tweet 2-3: Context and journey",
+          "Tweet 4: Turning point",
+          "Tweet 5-6: Solution with alternatives",
+          "Tweet 7-8: Results and how others can benefit"
+        ]
       }
     }
   ]
