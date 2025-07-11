@@ -13,7 +13,7 @@ import {
   type InsertFeedbackVote
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -282,16 +282,16 @@ export class DatabaseStorage implements IStorage {
           await db
             .update(communityFeedback)
             .set({
-              upvotes: db.sql`${communityFeedback.upvotes} + 1`,
-              downvotes: db.sql`${communityFeedback.downvotes} - 1`
+              upvotes: sql`${communityFeedback.upvotes} + 1`,
+              downvotes: sql`${communityFeedback.downvotes} - 1`
             })
             .where(eq(communityFeedback.id, feedbackId));
         } else {
           await db
             .update(communityFeedback)
             .set({
-              upvotes: db.sql`${communityFeedback.upvotes} - 1`,
-              downvotes: db.sql`${communityFeedback.downvotes} + 1`
+              upvotes: sql`${communityFeedback.upvotes} - 1`,
+              downvotes: sql`${communityFeedback.downvotes} + 1`
             })
             .where(eq(communityFeedback.id, feedbackId));
         }
@@ -310,12 +310,12 @@ export class DatabaseStorage implements IStorage {
       if (voteType === 'upvote') {
         await db
           .update(communityFeedback)
-          .set({ upvotes: db.sql`${communityFeedback.upvotes} + 1` })
+          .set({ upvotes: sql`${communityFeedback.upvotes} + 1` })
           .where(eq(communityFeedback.id, feedbackId));
       } else {
         await db
           .update(communityFeedback)
-          .set({ downvotes: db.sql`${communityFeedback.downvotes} + 1` })
+          .set({ downvotes: sql`${communityFeedback.downvotes} + 1` })
           .where(eq(communityFeedback.id, feedbackId));
       }
     }
