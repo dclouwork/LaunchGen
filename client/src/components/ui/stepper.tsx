@@ -30,8 +30,9 @@ export function Stepper({
       )}
     >
       {steps.map((step, index) => {
-        const isCompleted = currentStep > step.id;
-        const isActive = currentStep === step.id;
+        const isLastStep = index === steps.length - 1;
+        const isCompleted = currentStep > step.id || (isLastStep && currentStep === step.id);
+        const isActive = currentStep === step.id && !isLastStep;
         const isPending = currentStep < step.id;
         
         return (
