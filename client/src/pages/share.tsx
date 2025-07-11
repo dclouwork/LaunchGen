@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { usePostHog } from "posthog-js/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChartLine, ChevronRight, ChevronDown, Calendar, Clock, Target, Wrench, Copy, Home, Download } from "lucide-react";
@@ -14,6 +15,7 @@ export default function SharePage() {
   const { token } = useParams();
   const [expandedWeeks, setExpandedWeeks] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
+  const posthog = usePostHog();
 
   const { data, isLoading, error } = useQuery<{
     success: boolean;
@@ -25,6 +27,16 @@ export default function SharePage() {
   });
 
   const plan = data?.success ? data.plan : null;
+  
+  // Track when someone views a shared plan
+  useEffect(() => {
+    if (plan && token) {
+      posthog?.capture('shared_plan_viewed', {
+        share_token: token,
+        plan_title: plan.overview.split('.')[0] + " - 30-Day Launch Plan"
+      });
+    }
+  }, [plan, token, posthog]);
 
   const toggleWeekExpansion = (weekIndex: number) => {
     setExpandedWeeks(prev => ({
@@ -190,6 +202,15 @@ export default function SharePage() {
       const sanitizedTitle = planTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
       const fileName = `${sanitizedTitle}_${dateStr}.pdf`;
       pdf.save(fileName);
+      
+      // Track PDF download from share page
+      posthog?.capture('pdf_downloaded', {
+        from_page: 'share',
+        share_token: token,
+        plan_title: planTitle,
+        file_name: fileName,
+        page_count: pdf.getNumberOfPages()
+      });
 
       toast({
         title: "PDF Downloaded!",

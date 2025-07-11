@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { usePostHog } from "posthog-js/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ export default function Home() {
   const [currentGenerationStep, setCurrentGenerationStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const posthog = usePostHog();
 
   // Define the generation steps
   const generationSteps: Step[] = [
@@ -132,6 +134,16 @@ export default function Home() {
           setEditedPlanTitle(newTitle);
         }
         
+        // Track plan generation
+        posthog?.capture('plan_generated', {
+          method: 'text_input',
+          plan_id: data.planId,
+          business_name: businessName || 'Unknown',
+          has_post_drafts: data.plan.weeklyPlan.some((week: any) => 
+            week.dailyTasks.some((task: any) => task.postDraft)
+          )
+        });
+        
         // Delay slightly to show completion before hiding stepper
         setTimeout(() => {
           setIsGenerating(false);
@@ -203,6 +215,17 @@ export default function Home() {
           setEditedPlanTitle(newTitle);
         }
         
+        // Track PDF plan generation
+        posthog?.capture('plan_generated', {
+          method: 'pdf_upload',
+          plan_id: data.planId,
+          business_name: businessName || 'Unknown',
+          has_post_drafts: data.plan.weeklyPlan.some((week: any) => 
+            week.dailyTasks.some((task: any) => task.postDraft)
+          ),
+          extracted_text_length: data.extractedText?.length || 0
+        });
+        
         // Delay slightly to show completion before hiding stepper
         setTimeout(() => {
           setIsGenerating(false);
@@ -270,6 +293,14 @@ export default function Home() {
         const fullUrl = `${window.location.origin}${data.shareUrl}`;
         setShareUrl(fullUrl);
         setShowShareDialog(true);
+        
+        // Track plan sharing
+        posthog?.capture('plan_shared', {
+          plan_id: planId,
+          share_token: data.shareToken,
+          share_url: fullUrl,
+          plan_title: planTitle
+        });
       } else {
         throw new Error("Failed to generate share link");
       }
@@ -487,6 +518,14 @@ export default function Home() {
       const sanitizedTitle = planTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
       const fileName = `${sanitizedTitle}_${dateStr}.pdf`;
       pdf.save(fileName);
+      
+      // Track PDF download
+      posthog?.capture('pdf_downloaded', {
+        plan_id: planId,
+        plan_title: planTitle,
+        file_name: fileName,
+        page_count: pdf.getNumberOfPages()
+      });
 
       toast({
         title: "PDF Downloaded!",

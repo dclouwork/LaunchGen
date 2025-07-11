@@ -215,3 +215,19 @@ Preferred communication style: Simple, everyday language.
      - Updated `client/src/components/SEO.tsx` to handle domain-specific URLs
      - Modified `client/index.html` with new domain in all meta tags
      - Updated `client/public/sitemap.xml` and `client/public/robots.txt`
+
+12. **PostHog Analytics Integration** (January 11, 2025): Added comprehensive analytics tracking with custom events:
+   - **Configuration Updates**: 
+     - Modified PostHog initialization to disable tracking in development environment
+     - Only provides API key in production mode
+     - Uses opt_out_capturing() in development to prevent any data collection
+     - Disabled pageview, pageleave, autocapture, and session recording in dev
+   - **Custom Event Tracking**:
+     - Plan Generation: Tracks method (text_input/pdf_upload), plan_id, business_name, has_post_drafts
+     - PDF Downloads: Tracks from_page, plan details, file_name, and page_count
+     - Plan Sharing: Tracks when users generate share links with plan_id and share_token
+     - Shared Plan Views: Tracks when someone accesses a shared plan via share link
+   - **Implementation**: 
+     - Added usePostHog hook to home.tsx and share.tsx components
+     - Added posthog.capture() calls in mutation success handlers and key functions
+     - Included relevant metadata with each event for better analytics insights

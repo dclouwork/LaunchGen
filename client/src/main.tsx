@@ -4,15 +4,26 @@ import { PostHogProvider } from "posthog-js/react";
 import App from "./App";
 import "./index.css";
 
+const isProduction = import.meta.env.MODE === "production";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <PostHogProvider
-      apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+      apiKey={isProduction ? import.meta.env.VITE_PUBLIC_POSTHOG_KEY : ""}
       options={{
         api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-        defaults: "2025-05-24",
-        capture_exceptions: true,
-        debug: import.meta.env.MODE === "development",
+        loaded: (posthog) => {
+          if (!isProduction) {
+            posthog.opt_out_capturing();
+            console.log("PostHog analytics disabled in development");
+          }
+        },
+        capture_pageview: isProduction,
+        capture_pageleave: isProduction,
+        autocapture: isProduction,
+        disable_session_recording: !isProduction,
+        capture_exceptions: isProduction,
+        debug: false,
       }}
     >
       <App />
