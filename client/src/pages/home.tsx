@@ -1183,10 +1183,13 @@ export default function Home() {
                                                       onChange={(e) => {
                                                         if (editedPlan) {
                                                           const newPlan = { ...editedPlan };
-                                                          if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft) {
-                                                            newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {};
+                                                          const dailyTask = newPlan.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex];
+                                                          if (dailyTask) {
+                                                            if (!dailyTask.postDraft) {
+                                                              dailyTask.postDraft = {};
+                                                            }
+                                                            dailyTask.postDraft.title = e.target.value;
                                                           }
-                                                          newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.title = e.target.value;
                                                           setEditedPlan(newPlan);
                                                         }
                                                       }}
@@ -1204,10 +1207,13 @@ export default function Home() {
                                                       onChange={(e) => {
                                                         if (editedPlan) {
                                                           const newPlan = { ...editedPlan };
-                                                          if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft) {
-                                                            newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {};
+                                                          const dailyTask = newPlan.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex];
+                                                          if (dailyTask) {
+                                                            if (!dailyTask.postDraft) {
+                                                              dailyTask.postDraft = {};
+                                                            }
+                                                            dailyTask.postDraft.body = e.target.value;
                                                           }
-                                                          newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.body = e.target.value;
                                                           setEditedPlan(newPlan);
                                                         }
                                                       }}
@@ -1227,13 +1233,16 @@ export default function Home() {
                                                             onChange={(e) => {
                                                               if (editedPlan) {
                                                                 const newPlan = { ...editedPlan };
-                                                                if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft) {
-                                                                  newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {};
+                                                                const dailyTask = newPlan.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex];
+                                                                if (dailyTask) {
+                                                                  if (!dailyTask.postDraft) {
+                                                                    dailyTask.postDraft = {};
+                                                                  }
+                                                                  if (!dailyTask.postDraft.thread) {
+                                                                    dailyTask.postDraft.thread = [];
+                                                                  }
+                                                                  dailyTask.postDraft.thread[tweetIndex] = e.target.value;
                                                                 }
-                                                                if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread) {
-                                                                  newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread = [];
-                                                                }
-                                                                newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread[tweetIndex] = e.target.value;
                                                                 setEditedPlan(newPlan);
                                                               }
                                                             }}
@@ -1245,9 +1254,9 @@ export default function Home() {
                                                             onClick={() => {
                                                               if (editedPlan) {
                                                                 const newPlan = { ...editedPlan };
-                                                                if (newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft?.thread) {
-                                                                  newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread = 
-                                                                    newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread.filter((_, i) => i !== tweetIndex);
+                                                                const dailyTask = newPlan.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex];
+                                                                if (dailyTask?.postDraft?.thread) {
+                                                                  dailyTask.postDraft.thread = dailyTask.postDraft.thread.filter((_, i) => i !== tweetIndex);
                                                                 }
                                                                 setEditedPlan(newPlan);
                                                               }
@@ -1264,13 +1273,16 @@ export default function Home() {
                                                         onClick={() => {
                                                           if (editedPlan) {
                                                             const newPlan = { ...editedPlan };
-                                                            if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft) {
-                                                              newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft = {};
+                                                            const dailyTask = newPlan.weeklyPlan[weekIndex]?.dailyTasks[task.originalIndex];
+                                                            if (dailyTask) {
+                                                              if (!dailyTask.postDraft) {
+                                                                dailyTask.postDraft = {};
+                                                              }
+                                                              if (!dailyTask.postDraft.thread) {
+                                                                dailyTask.postDraft.thread = [];
+                                                              }
+                                                              dailyTask.postDraft.thread.push('');
                                                             }
-                                                            if (!newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread) {
-                                                              newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread = [];
-                                                            }
-                                                            newPlan.weeklyPlan[weekIndex].dailyTasks[task.originalIndex].postDraft.thread.push('');
                                                             setEditedPlan(newPlan);
                                                           }
                                                         }}
