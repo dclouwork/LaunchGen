@@ -55,7 +55,7 @@ A powerful single-page web application that generates detailed 30-day launch pla
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/launchgen.git
+git clone https://github.com/dclouwork/LaunchGen.git
 cd launchgen
 ```
 
@@ -234,8 +234,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📧 Support
 
-For support, email support@launchgen.dev or open an issue in the GitHub repository.
-
----
-
-Made with 🚀 by LaunchGen - Turn your business ideas into actionable 30-day launch plans.
+For support, email support@followusai.app or open an issue in the GitHub repository.
