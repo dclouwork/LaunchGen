@@ -850,7 +850,7 @@ export default function Home() {
                       )}
                     </Button>
                     <p className="text-xs text-muted-foreground text-center mt-2">
-                      This may take 30-60 seconds to generate your customized plan
+                      This may take 3-5 minutes to generate your customized plan. Our AI uses a complex algorithm to analyze your input and create a detailed 30-day strategy.
                     </p>
                   </div>
                 </form>
@@ -1001,7 +1001,7 @@ export default function Home() {
                       )}
                     </Button>
                     <p className="text-xs text-muted-foreground text-center mt-2">
-                      {!pdfFile ? "Please select a PDF file first" : "This may take 30-60 seconds to generate your customized plan"}
+                      {!pdfFile ? "Please select a PDF file first" : "This may take 3-5 minutes to generate your customized plan"}
                     </p>
                   </div>
                 </form>
